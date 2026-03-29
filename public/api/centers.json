@@ -1,0 +1,42 @@
+[
+    {
+        "id": "abc-point",
+        "name": "ABC Point",
+        "location": "Kathmandu",
+        "coords": {
+            "lat": 27.7172,
+            "lng": 85.3240
+        },
+        "address": "Lazimpat, Kathmandu"
+    },
+    {
+        "id": "efz-point",
+        "name": "EFZ Point",
+        "location": "Bhaktapur",
+        "coords": {
+            "lat": 27.6710,
+            "lng": 85.4298
+        },
+        "address": "Suryabinayak, Bhaktapur"
+    },
+    {
+        "id": "aaa-point",
+        "name": "AAA Point",
+        "location": "Lalitpur",
+        "coords": {
+            "lat": 27.6644,
+            "lng": 85.3188
+        },
+        "address": "Jhamsikhel, Lalitpur"
+    },
+    {
+        "id": "fty-point",
+        "name": "FTY Point",
+        "location": "Kathmandu",
+        "coords": {
+            "lat": 27.7215,
+            "lng": 85.3524
+        },
+        "address": "Bouddha, Kathmandu"
+    }
+]
