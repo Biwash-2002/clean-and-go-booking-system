@@ -19,7 +19,17 @@ interface Booking {
     status: string;
     price: number;
     center?: string;
-    [key: string]: any; // Allow other Formik values
+    centerName?: string;
+    createdAt?: string;
+    coords?: { lat: number; lng: number } | null;
+    address?: string;
+    firstName?: string;
+    lastName?: string;
+    email?: string;
+    phone?: string;
+    vehicleNumber?: string;
+    bookingType?: string;
+    message?: string;
 }
 
 const BookingPage = () => {
