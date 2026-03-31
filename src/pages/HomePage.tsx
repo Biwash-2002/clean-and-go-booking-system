@@ -264,7 +264,7 @@ const HomePage = () => {
                                 rightSection={<ArrowRight size={18} />}
                                 onClick={() => navigate('/locations')}
                             >
-                                View all 12 locations
+                                View all 4 locations
                             </Button>
                         </Grid.Col>
                         <Grid.Col span={{ base: 12, md: 7 }}>
