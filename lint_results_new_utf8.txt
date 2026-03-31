@@ -1,0 +1,46 @@
+﻿
+> new-car-wash-project@0.0.0 lint
+> eslint .
+
+
+C:\Users\LENOVO\Desktop\CleanandGo\src\components\Navbar.tsx
+  20:9  error  Error: Calling setState synchronously within an effect can trigger cascading renders
+
+Effects are intended to synchronize state between React and external systems such as manually updating the DOM, state management libraries, or other platform APIs. In general, the body of an effect should do one or both of the following:
+* Update external systems with the latest state from React.
+* Subscribe for updates from some external system, calling setState in a callback function when external state changes.
+
+Calling setState synchronously within an effect body causes cascading renders that can hurt performance, and is not recommended. (https://react.dev/learn/you-might-not-need-an-effect).
+
+C:\Users\LENOVO\Desktop\CleanandGo\src\components\Navbar.tsx:20:9
+  18 |         const storedUser = localStorage.getItem('car_wash_user');
+  19 |
+> 20 |         setIsLoggedIn(!!token);
+     |         ^^^^^^^^^^^^^ Avoid calling setState() directly within an effect
+  21 |         if (storedUser) {
+  22 |             setUser(JSON.parse(storedUser));
+  23 |         } else {  react-hooks/set-state-in-effect
+
+C:\Users\LENOVO\Desktop\CleanandGo\src\pages\BookingPage.tsx
+   18:46  error  Unexpected any. Specify a different type                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                             @typescript-eslint/no-explicit-any
+   24:17  error  Error: Calling setState synchronously within an effect can trigger cascading renders
+
+Effects are intended to synchronize state between React and external systems such as manually updating the DOM, state management libraries, or other platform APIs. In general, the body of an effect should do one or both of the following:
+* Update external systems with the latest state from React.
+* Subscribe for updates from some external system, calling setState in a callback function when external state changes.
+
+Calling setState synchronously within an effect body causes cascading renders that can hurt performance, and is not recommended. (https://react.dev/learn/you-might-not-need-an-effect).
+
+C:\Users\LENOVO\Desktop\CleanandGo\src\pages\BookingPage.tsx:24:17
+  22 |         if (stored) {
+  23 |             try {
+> 24 |                 setBookings(JSON.parse(stored));
+     |                 ^^^^^^^^^^^ Avoid calling setState() directly within an effect
+  25 |             } catch (e) {
+  26 |                 console.error('Failed to load bookings', e);
+  27 |             }  react-hooks/set-state-in-effect
+  124:73  error  Unexpected any. Specify a different type                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                             @typescript-eslint/no-explicit-any
+  146:76  error  Unexpected any. Specify a different type                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                             @typescript-eslint/no-explicit-any
+
+Γ£û 5 problems (5 errors, 0 warnings)
+

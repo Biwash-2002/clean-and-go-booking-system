@@ -34,9 +34,10 @@ const LocationPage = () => {
                 const data = await response.json();
                 setCenters(data);
                 setError(null);
-            } catch (err: any) {
+            } catch (err: unknown) {
+                const errorMessage = err instanceof Error ? err.message : 'An unexpected error occurred.';
                 console.error(err);
-                setError(err.message || 'An unexpected error occurred.');
+                setError(errorMessage);
             } finally {
                 setLoading(false);
             }
@@ -92,7 +93,7 @@ const LocationPage = () => {
 
     return (
         <Layout>
-            <Box style={{ backgroundColor: '#f8fafc', minHeight: '100vh', paddingBottom: '100px' } as any}>
+            <Box style={{ backgroundColor: '#f8fafc', minHeight: '100vh', paddingBottom: '100px' } as React.CSSProperties}>
                 {/* Header Section */}
                 <Box bg="white" py={60} style={{ borderBottom: '1px solid #e2e8f0' }}>
                     <Container size="lg">
@@ -103,10 +104,10 @@ const LocationPage = () => {
                                 transition={{ duration: 0.5 }}
                             >
                                 <Badge size="xl" variant="dot" color="blue" mb="md">NATIONWIDE SERVICE</Badge>
-                                <Title order={1} className="gradient-text" style={{ fontSize: 'clamp(2.5rem, 6vw, 4rem)', fontWeight: 900 } as any}>
+                                <Title order={1} className="gradient-text" style={{ fontSize: 'clamp(2.5rem, 6vw, 4rem)', fontWeight: 900 } as React.CSSProperties}>
                                     Clean&Go Locations
                                 </Title>
-                                <Text size="xl" c="dimmed" style={{ maxWidth: 700, margin: '0 20px' } as any}>
+                                <Text size="xl" c="dimmed" style={{ maxWidth: 700, margin: '0 20px' } as React.CSSProperties}>
                                     Find your nearest premium car wash point. Select a city to filter locations.
                                 </Text>
                             </motion.div>

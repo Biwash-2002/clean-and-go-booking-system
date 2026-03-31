@@ -17,42 +17,46 @@ interface Booking {
 
 const ProfilePage = () => {
     const navigate = useNavigate();
-    const [user, setUser] = useState<{
+    const [user] = useState<{
         name: string;
         email: string;
         phone: string;
         address: string;
         avatar: string;
-    } | null>(null);
-    const [bookings, setBookings] = useState<Booking[]>([]);
+    } | null>(() => {
+        const storedUser = localStorage.getItem('car_wash_user');
+        if (storedUser) {
+            try {
+                return JSON.parse(storedUser);
+            } catch (e) {
+                console.error('Failed to parse user', e);
+            }
+        }
+        return {
+            name: 'Clean User',
+            email: 'user@example.com',
+            phone: '---',
+            address: 'Nepal',
+            avatar: 'https://ui-avatars.com/api/?name=Clean+User'
+        };
+    });
+    const [bookings, setBookings] = useState<Booking[]>(() => {
+        const storedBookings = localStorage.getItem('car_wash_bookings');
+        if (storedBookings) {
+            try {
+                return JSON.parse(storedBookings);
+            } catch (e) {
+                console.error('Failed to parse bookings', e);
+            }
+        }
+        return [];
+    });
 
     useEffect(() => {
         // Auth Guard
         const token = localStorage.getItem('token');
-        const storedUser = localStorage.getItem('car_wash_user');
-        
         if (!token) {
             navigate('/login');
-            return;
-        }
-
-        if (storedUser) {
-            setUser(JSON.parse(storedUser));
-        } else {
-            // Default mock if login didn't provide it, but it should
-            setUser({
-                name: 'Clean User',
-                email: 'user@example.com',
-                phone: '---',
-                address: 'Nepal',
-                avatar: 'https://ui-avatars.com/api/?name=Clean+User'
-            });
-        }
-
-        // Fetch Bookings
-        const storedBookings = localStorage.getItem('car_wash_bookings');
-        if (storedBookings) {
-            setBookings(JSON.parse(storedBookings));
         }
     }, [navigate]);
 

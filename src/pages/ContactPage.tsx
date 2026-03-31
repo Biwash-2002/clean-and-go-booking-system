@@ -11,7 +11,7 @@ const ContactPage = () => {
         { icon: MessageCircle, title: 'WhatsApp', value: '+977-9801111111', color: 'teal' },
     ];
 
-    const handleSubmit = (e: any) => {
+    const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault();
         notifications.show({
             title: 'Message Sent',
@@ -22,7 +22,7 @@ const ContactPage = () => {
 
     return (
         <Layout>
-            <Box style={{ backgroundColor: '#f1f5f9', minHeight: '100vh', paddingBottom: '100px' } as any}>
+            <Box style={{ backgroundColor: '#f1f5f9', minHeight: '100vh', paddingBottom: '100px' } as React.CSSProperties}>
                 <Box style={{
                     background: 'linear-gradient(rgba(0,0,0,0.8), rgba(0,0,0,0.8)), url("https://images.unsplash.com/photo-1599256621730-535171e28e50?auto=format&fit=crop&q=80&w=2000")',
                     height: '40vh',
@@ -31,14 +31,14 @@ const ContactPage = () => {
                     justifyContent: 'center',
                     color: 'white',
                     textAlign: 'center'
-                } as any}>
+                } as React.CSSProperties}>
                     <Container size="md">
-                        <Title order={1} style={{ fontSize: 'clamp(2rem, 5vw, 3.5rem)', fontWeight: 900 } as any}>Contact <span className="gradient-text">Our Team</span></Title>
-                        <Text size="xl" mt="md" style={{ opacity: 0.8 } as any}>We're here to help you keep your vehicle in pristine condition.</Text>
+                        <Title order={1} style={{ fontSize: 'clamp(2rem, 5vw, 3.5rem)', fontWeight: 900 } as React.CSSProperties}>Contact <span className="gradient-text">Our Team</span></Title>
+                        <Text size="xl" mt="md" style={{ opacity: 0.8 } as React.CSSProperties}>We're here to help you keep your vehicle in pristine condition.</Text>
                     </Container>
                 </Box>
 
-                <Container size="lg" mt="-60px" style={{ position: 'relative', zIndex: 10 } as any}>
+                <Container size="lg" mt="-60px" style={{ position: 'relative', zIndex: 10 } as React.CSSProperties}>
                     <Grid gutter="xl">
                         <Grid.Col span={{ base: 12, md: 5 }}>
                             <Stack gap="lg">
@@ -59,9 +59,9 @@ const ContactPage = () => {
                                     </Stack>
                                 </Card>
 
-                                <Card padding="xl" radius="md" withBorder shadow="sm" style={{ backgroundColor: '#0f172a', color: 'white' } as any}>
+                                <Card padding="xl" radius="md" withBorder shadow="sm" style={{ backgroundColor: '#0f172a', color: 'white' } as React.CSSProperties}>
                                     <Title order={3} mb="sm">Emergency Service?</Title>
-                                    <Text size="sm" mb="xl" style={{ opacity: 0.8 } as any}>Call our 24/7 emergency hotline for immediate assistance at your location.</Text>
+                                    <Text size="sm" mb="xl" style={{ opacity: 0.8 } as React.CSSProperties}>Call our 24/7 emergency hotline for immediate assistance at your location.</Text>
                                     <Button fullWidth size="lg" radius="md" className="gradient-button" leftSection={<Phone size={20} />}>
                                         Call: +977-9804851228
                                     </Button>

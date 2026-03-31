@@ -28,7 +28,26 @@ interface Booking {
 }
 
 const HistoryPage = () => {
-    const [bookings, setBookings] = useState<Booking[]>([]);
+    const [bookings, setBookings] = useState<Booking[]>(() => {
+        const stored = localStorage.getItem('car_wash_bookings');
+        if (stored) {
+            try {
+                const parsed = JSON.parse(stored);
+                const sanitized = parsed.map((b: Booking) => ({
+                    ...b,
+                    price: b.price || 0,
+                    status: b.status || 'Confirmed'
+                }));
+                sanitized.sort((a: Booking, b: Booking) =>
+                    new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+                );
+                return sanitized;
+            } catch (e) {
+                console.error('Failed to parse bookings', e);
+            }
+        }
+        return [];
+    });
     const [selectedBooking, setSelectedBooking] = useState<Booking | null>(null);
     const [opened, { open, close }] = useDisclosure(false);
     
@@ -39,23 +58,7 @@ const HistoryPage = () => {
     const [dateFilter, setDateFilter] = useState<Date | null>(null);
 
     useEffect(() => {
-        const stored = localStorage.getItem('car_wash_bookings');
-        if (stored) {
-            try {
-                const parsed = JSON.parse(stored);
-                const sanitized = parsed.map((b: any) => ({
-                    ...b,
-                    price: b.price || 0,
-                    status: b.status || 'Confirmed'
-                }));
-                sanitized.sort((a: Booking, b: Booking) =>
-                    new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
-                );
-                setBookings(sanitized);
-            } catch (e) {
-                console.error('Failed to parse bookings', e);
-            }
-        }
+        // Initialization moved to useState lazy initializer
     }, []);
 
     const filteredBookings = useMemo(() => {

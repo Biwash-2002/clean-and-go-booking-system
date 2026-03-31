@@ -22,10 +22,10 @@ const AboutPage = () => {
                     justifyContent: 'center',
                     color: 'white',
                     textAlign: 'center'
-                } as any}>
+                } as React.CSSProperties}>
                     <Container size="md">
-                        <Title order={1} style={{ fontSize: 'clamp(2rem, 5vw, 3.5rem)', fontWeight: 900 } as any}>About Nepal Wash</Title>
-                        <Text size="xl" mt="md" style={{ opacity: 0.8 } as any}>Setting the standard for vehicle care in Nepal since 2020.</Text>
+                        <Title order={1} style={{ fontSize: 'clamp(2rem, 5vw, 3.5rem)', fontWeight: 900 } as React.CSSProperties}>About Nepal Wash</Title>
+                        <Text size="xl" mt="md" style={{ opacity: 0.8 } as React.CSSProperties}>Setting the standard for vehicle care in Nepal since 2020.</Text>
                     </Container>
                 </Box>
 
@@ -78,7 +78,7 @@ const AboutPage = () => {
                                 animate={{ opacity: 1, y: 0 }}
                                 transition={{ delay: index * 0.1 }}
                             >
-                                <Card padding="xl" radius="md" withBorder ta="center" style={{ height: '100%' } as any}>
+                                <Card padding="xl" radius="md" withBorder ta="center" style={{ height: '100%' } as React.CSSProperties}>
                                     <ThemeIcon variant="light" size={60} radius="xl" color={stat.color} mb="md">
                                         <stat.icon size={34} />
                                     </ThemeIcon>

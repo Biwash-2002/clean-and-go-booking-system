@@ -9,23 +9,27 @@ import Layout from '../components/Layout';
 const EditProfilePage = () => {
     const navigate = useNavigate();
     const [loading, setLoading] = useState(false);
-    const [user, setUser] = useState({
-        name: 'Ram Karki',
-        email: 'ram@example.com',
-        phone: '9812345678',
-        address: 'Kathmandu, Nepal',
-        avatar: 'https://i.pravatar.cc/150?u=ram'
-    });
-
-    useEffect(() => {
+    const [user, setUser] = useState(() => {
         const storedUser = localStorage.getItem('car_wash_user');
         if (storedUser) {
             try {
-                setUser(JSON.parse(storedUser));
+                return JSON.parse(storedUser);
             } catch (e) {
                 console.error('Failed to load user', e);
             }
         }
+        return {
+            name: 'Ram Karki',
+            email: 'ram@example.com',
+            phone: '9812345678',
+            address: 'Kathmandu, Nepal',
+            avatar: 'https://i.pravatar.cc/150?u=ram'
+        };
+    });
+
+    useEffect(() => {
+        // Keeping an empty useEffect if needed for other side effects, or just removing it
+        // Since we moved initialization to useState, we don't need this setState here.
     }, []);
 
     const handleSave = () => {

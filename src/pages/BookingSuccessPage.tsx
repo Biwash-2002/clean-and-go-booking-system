@@ -1,4 +1,4 @@
-import React, { useEffect } from 'react';
+import { useEffect } from 'react';
 import { Container, Title, Text, Button, Stack, Box } from '@mantine/core';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { CheckCircle2, Calendar, MapPin, ArrowRight } from 'lucide-react';

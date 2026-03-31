@@ -50,7 +50,7 @@ const LoginPage = () => {
 
     return (
         <Layout>
-            <Box style={{ backgroundColor: '#f1f5f9', minHeight: '80vh', display: 'flex', alignItems: 'center' } as any}>
+            <Box style={{ backgroundColor: '#f1f5f9', minHeight: '80vh', display: 'flex', alignItems: 'center' } as React.CSSProperties}>
                 <Container size="xs" w="100%">
                     <Card padding="xl" radius="lg" shadow="xl" withBorder>
                         <Stack align="center" mb="xl">
@@ -95,10 +95,10 @@ const LoginPage = () => {
                             <Text size="sm" c="dimmed">Don't have an account?</Text>
                             <Text
                                 size="sm"
-                                component={Link as any}
+                                component={Link}
                                 to="/register"
                                 fw={600}
-                                style={{ color: '#0061ff', textDecoration: 'none' } as any}
+                                style={{ color: '#0061ff', textDecoration: 'none' } as React.CSSProperties}
                             >
                                 Register Now
                             </Text>

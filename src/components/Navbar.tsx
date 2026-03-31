@@ -9,28 +9,39 @@ const Navbar = () => {
     const [opened, { toggle, close }] = useDisclosure(false);
     const navigate = useNavigate();
     const location = useLocation();
-    const [isLoggedIn, setIsLoggedIn] = useState(false);
-    const [user, setUser] = useState<{ name: string; avatar: string } | null>(null);
+    const [isLoggedIn, setIsLoggedIn] = useState(() => !!localStorage.getItem('token'));
+    const [user, setUser] = useState<{ name: string; avatar: string } | null>(() => {
+        const storedUser = localStorage.getItem('car_wash_user');
+        try {
+            return storedUser ? JSON.parse(storedUser) : null;
+        } catch (e) {
+            console.error('Failed to parse user', e);
+            return null;
+        }
+    });
 
     useEffect(() => {
-        // Simple check for token or user in localStorage
-        const token = localStorage.getItem('token');
+        const token = !!localStorage.getItem('token');
         const storedUser = localStorage.getItem('car_wash_user');
+        const parsedUser = storedUser ? JSON.parse(storedUser) : null;
         
-        setIsLoggedIn(!!token);
-        if (storedUser) {
-            setUser(JSON.parse(storedUser));
-        } else {
-            setUser(null);
-        }
-    }, [location.pathname]); // Re-check on navigation
+        Promise.resolve().then(() => {
+            if (isLoggedIn !== token) {
+                setIsLoggedIn(token);
+            }
+            
+            if (JSON.stringify(user) !== JSON.stringify(parsedUser)) {
+                setUser(parsedUser);
+            }
+        });
+    }, [location.pathname, isLoggedIn, user]); // Re-check on navigation
 
     const handleLogout = () => {
         // Clear auth data
         localStorage.removeItem('token');
         // If we have other user-related data
         // localStorage.removeItem('user_profile'); 
-        
+
         setIsLoggedIn(false);
         notifications.show({
             title: 'Logged Out',
@@ -56,11 +67,10 @@ const Navbar = () => {
             key={link.label}
             component={Link}
             to={link.link}
-            className={`px-4 py-2 rounded-xl text-sm font-bold transition-all duration-300 ${
-                isActive(link.link) 
-                ? 'bg-primary-50 text-primary-600' 
-                : 'text-gray-600 hover:text-primary-600 hover:bg-gray-50'
-            }`}
+            className={`px-4 py-2 rounded-xl text-sm font-bold transition-all duration-300 ${isActive(link.link)
+                    ? 'bg-primary-50 text-primary-600'
+                    : 'text-gray-600 hover:text-primary-600 hover:bg-gray-50'
+                }`}
             onClick={close}
         >
             {link.label}
@@ -101,7 +111,7 @@ const Navbar = () => {
                                     <Menu.Label>Accounting</Menu.Label>
                                     <Menu.Item leftSection={<User size={16} />} onClick={() => navigate('/profile')}>My Profile</Menu.Item>
                                     <Menu.Item leftSection={<History size={16} />} onClick={() => navigate('/history')}>Booking History</Menu.Item>
-                                    
+
                                     <Menu.Label>Settings</Menu.Label>
                                     <Menu.Item leftSection={<Settings size={16} />}>Preferences</Menu.Item>
                                     <Menu.Divider />
@@ -116,8 +126,8 @@ const Navbar = () => {
                                 <Button variant="light" color="blue" leftSection={<UserPlus size={18} />} onClick={() => navigate('/register')}>Sign Up</Button>
                             </Group>
                         )}
-                        
-                        <Button 
+
+                        <Button
                             className="bg-primary-600 hover:bg-primary-700 h-12 px-6 rounded-xl font-bold font-sans tracking-wide shadow-md shadow-primary-200"
                             onClick={() => navigate('/book')}
                             leftSection={<Calendar size={18} />}
@@ -130,11 +140,11 @@ const Navbar = () => {
                 </Group>
             </Container>
 
-            <Drawer 
-                opened={opened} 
-                onClose={close} 
-                size="100%" 
-                padding="xl" 
+            <Drawer
+                opened={opened}
+                onClose={close}
+                size="100%"
+                padding="xl"
                 title={<Text className="text-xl font-black text-primary-600 tracking-tighter uppercase">Menu</Text>}
                 hiddenFrom="sm"
                 styles={{
@@ -147,10 +157,10 @@ const Navbar = () => {
                     <Divider my="md" />
                     {isLoggedIn ? (
                         <>
-                            <Button 
-                                variant="light" 
-                                size="lg" 
-                                fullWidth 
+                            <Button
+                                variant="light"
+                                size="lg"
+                                fullWidth
                                 radius="xl"
                                 className="bg-primary-50 text-primary-600 hover:bg-primary-100 h-14"
                                 onClick={() => { navigate('/profile'); close(); }}
@@ -158,11 +168,11 @@ const Navbar = () => {
                             >
                                 My Profile
                             </Button>
-                            <Button 
-                                variant="outline" 
+                            <Button
+                                variant="outline"
                                 color="red"
-                                size="lg" 
-                                fullWidth 
+                                size="lg"
+                                fullWidth
                                 radius="xl"
                                 className="h-14"
                                 onClick={handleLogout}
@@ -173,20 +183,20 @@ const Navbar = () => {
                         </>
                     ) : (
                         <>
-                            <Button 
-                                variant="light" 
-                                size="lg" 
-                                fullWidth 
+                            <Button
+                                variant="light"
+                                size="lg"
+                                fullWidth
                                 radius="xl"
                                 onClick={() => { navigate('/login'); close(); }}
                                 leftSection={<LogIn size={18} />}
                             >
                                 Login
                             </Button>
-                            <Button 
-                                variant="outline" 
-                                size="lg" 
-                                fullWidth 
+                            <Button
+                                variant="outline"
+                                size="lg"
+                                fullWidth
                                 radius="xl"
                                 onClick={() => { navigate('/register'); close(); }}
                                 leftSection={<UserPlus size={18} />}
@@ -195,9 +205,9 @@ const Navbar = () => {
                             </Button>
                         </>
                     )}
-                    <Button 
-                        size="lg" 
-                        fullWidth 
+                    <Button
+                        size="lg"
+                        fullWidth
                         radius="xl"
                         className="bg-primary-600 hover:bg-primary-700 h-14"
                         onClick={() => { navigate('/book'); close(); }}

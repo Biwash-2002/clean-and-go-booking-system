@@ -1,4 +1,4 @@
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect } from 'react';
 import { Container, Grid, Card, Title, Text, TextInput, Select, Button, Stack, SimpleGrid, Box, LoadingOverlay, Divider, ActionIcon } from '@mantine/core';
 import { DatePickerInput } from '@mantine/dates';
 import { useNavigate, useLocation } from 'react-router-dom';
@@ -11,21 +11,35 @@ import Layout from '../components/Layout';
 import { motion } from 'framer-motion';
 import { notifications } from '@mantine/notifications';
 
+interface Booking {
+    id: string;
+    packageName: string;
+    bookingDate: string;
+    timeSlot: string;
+    status: string;
+    price: number;
+    center?: string;
+    [key: string]: any; // Allow other Formik values
+}
+
 const BookingPage = () => {
     const navigate = useNavigate();
     const routerLocation = useLocation();
     const [isSubmitting, setIsSubmitting] = useState(false);
-    const [bookings, setBookings] = useState<any[]>([]);
-
-    useEffect(() => {
+    const [bookings, setBookings] = useState<Booking[]>(() => {
         const stored = localStorage.getItem('car_wash_bookings');
         if (stored) {
             try {
-                setBookings(JSON.parse(stored));
+                return JSON.parse(stored);
             } catch (e) {
                 console.error('Failed to load bookings', e);
             }
         }
+        return [];
+    });
+
+    useEffect(() => {
+        // Initialization moved to useState lazy initializer
     }, []);
 
     const getBookedSlots = (date: Date | null, centerId: string) => {
@@ -121,38 +135,44 @@ const BookingPage = () => {
                             setIsSubmitting(true);
                             setTimeout(() => {
                                 const pkg = WASH_PACKAGES.find(p => p.id === values.package);
-                                const center = WASHING_CENTERS.find((c: any) => c.id === values.center);
+                                const center = WASHING_CENTERS.find((c) => c.id === values.center);
 
-                                const newBooking = {
+                                const newBooking: Booking = {
                                     ...values,
                                     id: Math.random().toString(36).substr(2, 6).toUpperCase(),
                                     packageName: pkg?.name || '',
                                     price: pkg?.price || 0,
                                     centerName: center?.name || '',
                                     status: 'Confirmed',
-                                    createdAt: new Date().toISOString()
+                                    createdAt: new Date().toISOString(),
+                                    bookingDate: values.bookingDate ? values.bookingDate.toISOString() : ''
                                 };
 
                                 const updated = [newBooking, ...bookings];
                                 localStorage.setItem('car_wash_bookings', JSON.stringify(updated));
+                                setBookings(updated);
                                 
                                 setIsSubmitting(false);
                                 navigate('/booking-success', { state: { booking: newBooking } });
                             }, 1500);
                         }}
                     >
-                        {({ values, touched, errors, setFieldValue, handleSubmit }: any) => {
+                        {({ values, touched, errors, setFieldValue, handleSubmit }) => {
                             const currentPkg = WASH_PACKAGES.find(p => p.id === values.package);
-                            const currentCenter = WASHING_CENTERS.find((c: any) => c.id === values.center);
+                            const currentCenter = WASHING_CENTERS.find((c) => c.id === values.center);
                             const bookedSlots = getBookedSlots(values.bookingDate, values.center);
 
-                            const availableSlots = useMemo(() => {
-                                if (!currentPkg) return [];
-                                return generateTimeSlots(currentPkg.duration);
-                            }, [currentPkg]);
+                                                            const availableSlots = currentPkg ? generateTimeSlots(currentPkg.duration) : [];
 
                             return (
-                                <form onSubmit={(e) => { e.preventDefault(); handleSubmit(e); }}>
+                                <form onSubmit={(e) => {
+                                    e.preventDefault();
+                                    const submitter = (e.nativeEvent as SubmitEvent).submitter as HTMLElement | null;
+                                    if (!submitter?.dataset?.submitButton) {
+                                        return;
+                                    }
+                                    handleSubmit(e);
+                                }}>
                                     <Box pos="relative">
                                         <LoadingOverlay visible={isSubmitting} overlayProps={{ blur: 2 }} zIndex={1000} />
                                         
@@ -293,9 +313,9 @@ const BookingPage = () => {
                                                                 label="Select Package"
                                                                 placeholder="Pick a package"
                                                                 data={WASH_PACKAGES.filter(p => p.planType === values.bookingType).map(p => ({ value: p.id, label: p.name }))}
-                                                                value={values.package}
+                                                                 value={values.package}
                                                                 onChange={(val) => setFieldValue('package', val || '')}
-                                                                error={touched.package && errors.package}
+                                                                error={touched.package && (errors.package as string)}
                                                                 radius="md"
                                                                 labelProps={{ className: 'mb-1 font-semibold text-gray-700' }}
                                                             />
@@ -308,7 +328,7 @@ const BookingPage = () => {
                                                                     setFieldValue('center', val || '');
                                                                     setFieldValue('timeSlot', '');
                                                                 }}
-                                                                error={touched.center && errors.center}
+                                                                error={touched.center && (errors.center as string)}
                                                                 radius="md"
                                                                 labelProps={{ className: 'mb-1 font-semibold text-gray-700' }}
                                                             />
@@ -323,9 +343,10 @@ const BookingPage = () => {
                                                                     setFieldValue('bookingDate', val);
                                                                     setFieldValue('timeSlot', '');
                                                                 }}
-                                                                minDate={new Date()}
-                                                                error={touched.bookingDate && errors.bookingDate}
+                                                                error={touched.bookingDate && (errors.bookingDate as string)}
                                                                 radius="md"
+                                                                minDate={new Date()}
+                                                                hideOutsideDates
                                                                 labelProps={{ className: 'mb-1 font-semibold text-gray-700' }}
                                                             />
 
@@ -391,6 +412,7 @@ const BookingPage = () => {
                                                             mt="xl" 
                                                             radius="md" 
                                                             type="submit" 
+                                                            data-submit-button="true"
                                                             className="bg-white text-primary-600 hover:bg-gray-50 font-bold h-14"
                                                             disabled={isSubmitting}
                                                             leftSection={<CheckCircle size={20} />}

@@ -20,10 +20,10 @@ const Footer = () => {
             title: 'Support',
             links: [
                 { label: 'Our Locations', link: '/locations' },
-                { label: 'Booking History', link: '/history' },
+                // { label: 'Booking History', link: '/history' },
                 { label: 'Edit Profile', link: '/profile' },
-                { label: 'Help Center', link: '/help' },
-                { label: 'Privacy Policy', link: '/privacy' },
+                // { label: 'Help Center', link: '/help' },
+                // { label: 'Privacy Policy', link: '/privacy' },
             ]
         }
     ];
