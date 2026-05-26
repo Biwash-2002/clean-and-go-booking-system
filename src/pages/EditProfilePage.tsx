@@ -49,7 +49,7 @@ const EditProfilePage = () => {
 
     return (
         <Layout>
-            <div className="min-h-screen bg-gray-50 py-20">
+            <div className="min-h-screen bg-slate-50 py-20">
                 <Container size="sm">
                     <motion.div
                         initial={{ opacity: 0, y: 20 }}
@@ -61,22 +61,22 @@ const EditProfilePage = () => {
                                 variant="subtle" 
                                 leftSection={<ArrowLeft size={18} />} 
                                 onClick={() => navigate('/profile')}
-                                className="text-gray-500 hover:text-primary-600 hover:bg-primary-50 px-0 font-bold"
+                                className="text-slate-500 hover:text-indigo-600 hover:bg-indigo-50/60 px-0 font-extrabold"
                             >
                                 Back to Profile
                             </Button>
                             <Group gap="xs">
-                                <ActionIcon variant="light" color="gray" size="lg" radius="md">
+                                <ActionIcon variant="light" color="indigo" size="lg" radius="md">
                                     <Bell size={20} />
                                 </ActionIcon>
-                                <ActionIcon variant="light" color="gray" size="lg" radius="md">
+                                <ActionIcon variant="light" color="indigo" size="lg" radius="md">
                                     <ShieldCheck size={20} />
                                 </ActionIcon>
                             </Group>
                         </header>
 
-                        <Card shadow="xl" radius="lg" padding={40} className="border-none shadow-blue-900/5 relative overflow-hidden">
-                            <div className="absolute top-0 right-0 w-32 h-32 bg-primary-600/5 rounded-full blur-3xl -mr-16 -mt-16"></div>
+                        <Card padding={40} className="luxury-card border-none shadow-xl relative overflow-hidden">
+                            <div className="absolute top-0 right-0 w-32 h-32 bg-indigo-600/5 rounded-full blur-3xl -mr-16 -mt-16"></div>
                             
                             <Box className="relative mb-12 flex flex-col items-center">
                                 <div className="relative">
@@ -84,16 +84,16 @@ const EditProfilePage = () => {
                                         src={user.avatar} 
                                         size={140} 
                                         radius={100} 
-                                        className="border-8 border-white shadow-2xl ring-1 ring-gray-100"
+                                        className="border-8 border-white shadow-2xl ring-1 ring-slate-100"
                                     >
                                         <User size={60} color="#cbd5e1" />
                                     </Avatar>
-                                    <button className="absolute bottom-2 right-2 p-3 bg-primary-600 text-white rounded-2xl shadow-xl hover:bg-primary-700 transition-all border-4 border-white">
+                                    <button className="absolute bottom-2 right-2 p-3 bg-indigo-600 text-white rounded-2xl shadow-xl hover:bg-indigo-700 transition-all border-4 border-white cursor-pointer">
                                         <Camera size={20} />
                                     </button>
                                 </div>
-                                <Title order={2} mt="xl" className="text-3xl font-black text-gray-900 tracking-tight">Edit Profile</Title>
-                                <Text size="sm" className="text-gray-400 font-medium mt-1 uppercase tracking-widest">Global Account ID: US-9921</Text>
+                                <Title order={2} mt="xl" className="text-3xl font-sans font-black text-slate-900 tracking-tight uppercase">Edit Profile</Title>
+                                <Text size="xs" className="text-slate-400 font-extrabold mt-1.5 uppercase tracking-widest">Global Account ID: US-9921</Text>
                             </Box>
 
                             <Stack gap="xl">
@@ -103,11 +103,11 @@ const EditProfilePage = () => {
                                         placeholder="Enter your name"
                                         value={user.name}
                                         onChange={(e) => setUser({ ...user, name: e.target.value })}
-                                        leftSection={<User size={18} className="text-gray-400" />}
+                                        leftSection={<User size={18} className="text-slate-400" />}
                                         size="lg"
                                         radius="md"
                                         className="font-semibold"
-                                        labelProps={{ className: 'mb-1 text-xs font-bold uppercase tracking-wider text-gray-500' }}
+                                        labelProps={{ className: 'mb-1 text-xs font-bold uppercase tracking-wider text-slate-500' }}
                                     />
 
                                     <TextInput
@@ -115,11 +115,11 @@ const EditProfilePage = () => {
                                         placeholder="Enter your email"
                                         value={user.email}
                                         onChange={(e) => setUser({ ...user, email: e.target.value })}
-                                        leftSection={<Mail size={18} className="text-gray-400" />}
+                                        leftSection={<Mail size={18} className="text-slate-400" />}
                                         size="lg"
                                         radius="md"
                                         className="font-semibold"
-                                        labelProps={{ className: 'mb-1 text-xs font-bold uppercase tracking-wider text-gray-500' }}
+                                        labelProps={{ className: 'mb-1 text-xs font-bold uppercase tracking-wider text-slate-500' }}
                                     />
                                 </div>
 
@@ -128,11 +128,11 @@ const EditProfilePage = () => {
                                     placeholder="98XXXXXXXX"
                                     value={user.phone}
                                     onChange={(e) => setUser({ ...user, phone: e.target.value })}
-                                    leftSection={<Phone size={18} className="text-gray-400" />}
+                                    leftSection={<Phone size={18} className="text-slate-400" />}
                                     size="lg"
                                     radius="md"
                                     className="font-semibold"
-                                    labelProps={{ className: 'mb-1 text-xs font-bold uppercase tracking-wider text-gray-500' }}
+                                    labelProps={{ className: 'mb-1 text-xs font-bold uppercase tracking-wider text-slate-500' }}
                                 />
 
                                 <TextInput
@@ -140,27 +140,27 @@ const EditProfilePage = () => {
                                     placeholder="Enter your address"
                                     value={user.address}
                                     onChange={(e) => setUser({ ...user, address: e.target.value })}
-                                    leftSection={<MapPin size={18} className="text-gray-400" />}
+                                    leftSection={<MapPin size={18} className="text-slate-400" />}
                                     size="lg"
                                     radius="md"
                                     className="font-semibold"
-                                    labelProps={{ className: 'mb-1 text-xs font-bold uppercase tracking-wider text-gray-500' }}
+                                    labelProps={{ className: 'mb-1 text-xs font-bold uppercase tracking-wider text-slate-500' }}
                                 />
 
-                                <Divider my="lg" label={<Text size="xs" c="dimmed" fw={700}>MEMBER SINCE 2024</Text>} labelPosition="center" />
+                                <Divider my="lg" label={<Text size="xs" c="dimmed" fw={700}>MEMBER SINCE 2024</Text>} labelPosition="center" className="border-slate-100" />
 
                                 <Button 
                                     fullWidth 
                                     size="xl" 
                                     radius="md" 
-                                    className="bg-primary-600 hover:bg-primary-700 h-16 shadow-lg shadow-primary-200 font-bold text-lg"
+                                    className="bg-indigo-600 hover:bg-indigo-700 h-16 shadow-lg shadow-indigo-600/10 font-bold text-lg rounded-xl"
                                     onClick={handleSave}
                                     loading={loading}
                                     leftSection={<Save size={22} />}
                                 >
                                     Save Profile Data
                                 </Button>
-                                <Text size="xs" ta="center" className="text-gray-400 font-medium">
+                                <Text size="xs" ta="center" className="text-slate-400 font-medium">
                                     Last synchronized: {new Date().toLocaleDateString()}
                                 </Text>
                             </Stack>

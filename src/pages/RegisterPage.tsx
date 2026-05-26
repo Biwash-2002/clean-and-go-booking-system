@@ -57,72 +57,90 @@ const RegisterPage = () => {
 
     return (
         <Layout>
-            <Box style={{ backgroundColor: '#f1f5f9', minHeight: '90vh', display: 'flex', alignItems: 'center', padding: '40px 0' } as React.CSSProperties}>
+            <Box style={{ backgroundColor: '#f8fafc', minHeight: '90vh', display: 'flex', alignItems: 'center', padding: '40px 0' } as React.CSSProperties}>
                 <Container size="sm" w="100%">
-                    <Card padding="xl" radius="lg" shadow="xl" withBorder>
+                    <Card padding="xl" className="luxury-card border-none shadow-xl p-10">
                         <Stack align="center" mb="xl">
-                            <ThemeIcon size={50} radius="xl" className="gradient-button">
-                                <Car size={30} />
+                            <ThemeIcon size={52} radius="xl" className="bg-indigo-600 text-white shadow-lg shadow-indigo-600/20">
+                                <Car size={26} />
                             </ThemeIcon>
-                            <Title order={2}>Create Account</Title>
-                            <Text c="dimmed" size="sm">Join Nepal's premier car wash community</Text>
+                            <Title order={2} className="font-sans font-black uppercase tracking-tight text-slate-900 mt-2 text-2xl">Create Account</Title>
+                            <Text className="text-slate-400 font-semibold" size="sm">Join Nepal's premier car wash community</Text>
                         </Stack>
 
                         <form onSubmit={formik.handleSubmit}>
-                            <Stack>
+                            <Stack gap="md">
                                 <SimpleGrid cols={{ base: 1, sm: 2 }}>
                                     <TextInput
                                         label="First Name"
                                         placeholder="Ram"
-                                        leftSection={<User size={16} />}
+                                        leftSection={<User size={16} className="text-slate-400" />}
                                         {...formik.getFieldProps('firstName')}
                                         error={formik.touched.firstName && formik.errors.firstName}
+                                        size="md"
+                                        radius="md"
+                                        labelProps={{ className: 'mb-1 text-xs font-bold uppercase tracking-wider text-slate-500' }}
                                     />
                                     <TextInput
                                         label="Last Name"
-                                        placeholder="karki"
-                                        leftSection={<User size={16} />}
+                                        placeholder="Karki"
+                                        leftSection={<User size={16} className="text-slate-400" />}
                                         {...formik.getFieldProps('lastName')}
                                         error={formik.touched.lastName && formik.errors.lastName}
+                                        size="md"
+                                        radius="md"
+                                        labelProps={{ className: 'mb-1 text-xs font-bold uppercase tracking-wider text-slate-500' }}
                                     />
                                 </SimpleGrid>
 
                                 <TextInput
-                                    label="Email"
+                                    label="Email Address"
                                     placeholder="your@email.com"
-                                    leftSection={<Mail size={16} />}
+                                    leftSection={<Mail size={16} className="text-slate-400" />}
                                     {...formik.getFieldProps('email')}
                                     error={formik.touched.email && formik.errors.email}
+                                    size="md"
+                                    radius="md"
+                                    labelProps={{ className: 'mb-1 text-xs font-bold uppercase tracking-wider text-slate-500' }}
                                 />
 
                                 <TextInput
                                     label="Phone Number"
                                     placeholder="+977-98XXXXXXXX"
-                                    leftSection={<Phone size={16} />}
+                                    leftSection={<Phone size={16} className="text-slate-400" />}
                                     {...formik.getFieldProps('phone')}
                                     error={formik.touched.phone && formik.errors.phone}
+                                    size="md"
+                                    radius="md"
+                                    labelProps={{ className: 'mb-1 text-xs font-bold uppercase tracking-wider text-slate-500' }}
                                 />
 
                                 <SimpleGrid cols={{ base: 1, sm: 2 }}>
                                     <PasswordInput
                                         label="Password"
                                         placeholder="Min 8 chars"
-                                        leftSection={<Lock size={16} />}
+                                        leftSection={<Lock size={16} className="text-slate-400" />}
                                         {...formik.getFieldProps('password')}
                                         error={formik.touched.password && formik.errors.password}
+                                        size="md"
+                                        radius="md"
+                                        labelProps={{ className: 'mb-1 text-xs font-bold uppercase tracking-wider text-slate-500' }}
                                     />
                                     <PasswordInput
                                         label="Confirm Password"
                                         placeholder="Repeat password"
-                                        leftSection={<Lock size={16} />}
+                                        leftSection={<Lock size={16} className="text-slate-400" />}
                                         {...formik.getFieldProps('confirmPassword')}
                                         error={formik.touched.confirmPassword && formik.errors.confirmPassword}
+                                        size="md"
+                                        radius="md"
+                                        labelProps={{ className: 'mb-1 text-xs font-bold uppercase tracking-wider text-slate-500' }}
                                     />
                                 </SimpleGrid>
 
                                 <Button 
                                     fullWidth 
-                                    className="gradient-button" 
+                                    className="bg-indigo-600 hover:bg-indigo-700 text-white font-extrabold h-12 shadow-lg shadow-indigo-600/10 rounded-xl" 
                                     size="md" 
                                     radius="md" 
                                     mt="md" 
@@ -135,13 +153,14 @@ const RegisterPage = () => {
                         </form>
 
                         <Group justify="center" mt="xl">
-                            <Text size="sm" c="dimmed">Already have an account?</Text>
+                            <Text size="sm" className="text-slate-400 font-semibold">Already have an account?</Text>
                             <Text
                                 size="sm"
                                 component={Link}
                                 to="/login"
-                                fw={600}
-                                style={{ color: '#0061ff', textDecoration: 'none' } as React.CSSProperties}
+                                fw={700}
+                                className="text-indigo-600 hover:text-indigo-700 hover:underline"
+                                style={{ textDecoration: 'none' } as React.CSSProperties}
                             >
                                 Login Here
                             </Text>

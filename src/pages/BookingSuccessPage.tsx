@@ -1,9 +1,15 @@
 import { useEffect } from 'react';
-import { Container, Title, Text, Button, Stack, Box } from '@mantine/core';
+import { Container, Title, Text, Button, Stack, Box, Loader, Center } from '@mantine/core';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { CheckCircle2, Calendar, MapPin, ArrowRight } from 'lucide-react';
 import { motion } from 'framer-motion';
 import Layout from '../components/Layout';
+
+const formatDateSafely = (dateStr: string) => {
+    if (!dateStr) return '---';
+    const date = new Date(dateStr);
+    return isNaN(date.getTime()) ? '---' : date.toLocaleDateString();
+};
 
 const BookingSuccessPage = () => {
     const navigate = useNavigate();
@@ -16,7 +22,18 @@ const BookingSuccessPage = () => {
         }
     }, [booking, navigate]);
 
-    if (!booking) return null;
+    if (!booking) {
+        return (
+            <Layout>
+                <Center style={{ minHeight: '70vh' }}>
+                    <Stack align="center" gap="md">
+                        <Loader size="xl" variant="dots" color="blue" />
+                        <Text size="lg" fw={500} c="blue">Redirecting to booking history...</Text>
+                    </Stack>
+                </Center>
+            </Layout>
+        );
+    }
 
     return (
         <Layout>
@@ -53,7 +70,7 @@ const BookingSuccessPage = () => {
                                     <div>
                                         <Text className="text-xs font-bold text-blue-800 uppercase tracking-wider">Date & Time</Text>
                                         <Text className="font-semibold text-gray-900">
-                                            {new Date(booking.bookingDate).toLocaleDateString()} at {booking.timeSlot}
+                                            {formatDateSafely(booking.bookingDate)} at {booking.timeSlot}
                                         </Text>
                                     </div>
                                 </div>

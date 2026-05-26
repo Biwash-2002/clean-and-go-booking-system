@@ -95,7 +95,7 @@ const LocationPage = () => {
         <Layout>
             <Box style={{ backgroundColor: '#f8fafc', minHeight: '100vh', paddingBottom: '100px' } as React.CSSProperties}>
                 {/* Header Section */}
-                <Box bg="white" py={60} style={{ borderBottom: '1px solid #e2e8f0' }}>
+                <Box bg="white" py={70} style={{ borderBottom: '1px solid #f1f5f9' }}>
                     <Container size="lg">
                         <Stack align="center" ta="center">
                             <motion.div
@@ -103,11 +103,11 @@ const LocationPage = () => {
                                 animate={{ opacity: 1, scale: 1 }}
                                 transition={{ duration: 0.5 }}
                             >
-                                <Badge size="xl" variant="dot" color="blue" mb="md">NATIONWIDE SERVICE</Badge>
-                                <Title order={1} className="gradient-text" style={{ fontSize: 'clamp(2.5rem, 6vw, 4rem)', fontWeight: 900 } as React.CSSProperties}>
+                                <Badge size="xl" variant="dot" color="indigo" mb="md" className="font-extrabold tracking-widest uppercase pl-0">Nationwide Service</Badge>
+                                <Title order={1} className="text-slate-900 font-sans font-black uppercase tracking-tight" style={{ fontSize: 'clamp(2.5rem, 6vw, 4rem)', fontWeight: 900 } as React.CSSProperties}>
                                     Clean&Go Locations
                                 </Title>
-                                <Text size="xl" c="dimmed" style={{ maxWidth: 700, margin: '0 20px' } as React.CSSProperties}>
+                                <Text size="lg" className="text-slate-500 font-medium" style={{ maxWidth: 700, margin: '15px 20px 0' } as React.CSSProperties}>
                                     Find your nearest premium car wash point. Select a city to filter locations.
                                 </Text>
                             </motion.div>
@@ -117,10 +117,11 @@ const LocationPage = () => {
                                     fullWidth
                                     size="lg"
                                     radius="xl"
-                                    color="blue"
+                                    color="indigo"
                                     value={selectedCity}
                                     onChange={setSelectedCity}
                                     data={cities}
+                                    className="border border-slate-100 bg-slate-50/50 p-1"
                                 />
                             </Box>
                         </Stack>
@@ -142,19 +143,18 @@ const LocationPage = () => {
                                     <Card
                                         padding="xl"
                                         radius="lg"
-                                        withBorder
-                                        className="premium-card"
+                                        className="luxury-card"
                                         h="100%"
                                         style={{ display: 'flex', flexDirection: 'column' }}
                                     >
                                         <Group justify="space-between" mb="lg">
-                                            <Title order={3} size="1.4rem" fw={800}>{center.name}</Title>
-                                            <Badge size="lg" color="blue" radius="sm" variant="light">
+                                            <Title order={3} size="1.35rem" fw={900} className="text-slate-900 uppercase font-sans tracking-tight">{center.name}</Title>
+                                            <Badge size="lg" color="indigo" radius="md" variant="light" className="font-extrabold uppercase tracking-wider px-3">
                                                 {center.location}
                                             </Badge>
                                         </Group>
 
-                                        <Box mb="xl" style={{ height: '240px', borderRadius: '12px', overflow: 'hidden', border: '1px solid #e2e8f0' }}>
+                                        <Box mb="xl" style={{ height: '240px', borderRadius: '16px', overflow: 'hidden', border: '1px solid #f1f5f9' }}>
                                             <GoogleMapComponent
                                                 locations={[center]}
                                                 zoom={15}
@@ -163,22 +163,22 @@ const LocationPage = () => {
 
                                         <Stack gap="md" style={{ flex: 1 }}>
                                             <Group gap="md">
-                                                <Box p={10} style={{ backgroundColor: '#eff6ff', borderRadius: '10px' }}>
-                                                    <MapPin size={22} color="#2563eb" />
+                                                <Box p={10} style={{ backgroundColor: '#f5f3ff', borderRadius: '12px' }}>
+                                                    <MapPin size={20} color="#4f46e5" />
                                                 </Box>
-                                                <Text size="md" fw={500}>{center.address}</Text>
+                                                <Text size="sm" fw={700} className="text-slate-700">{center.address}</Text>
                                             </Group>
                                             <Group gap="md">
-                                                <Box p={10} style={{ backgroundColor: '#eff6ff', borderRadius: '10px' }}>
-                                                    <Phone size={22} color="#2563eb" />
+                                                <Box p={10} style={{ backgroundColor: '#f5f3ff', borderRadius: '12px' }}>
+                                                    <Phone size={20} color="#4f46e5" />
                                                 </Box>
-                                                <Text size="md" fw={500}>+977-9801234567</Text>
+                                                <Text size="sm" fw={700} className="text-slate-700">+977-9801234567</Text>
                                             </Group>
                                             <Group gap="md">
-                                                <Box p={10} style={{ backgroundColor: '#eff6ff', borderRadius: '10px' }}>
-                                                    <Clock size={22} color="#2563eb" />
+                                                <Box p={10} style={{ backgroundColor: '#f5f3ff', borderRadius: '12px' }}>
+                                                    <Clock size={20} color="#4f46e5" />
                                                 </Box>
-                                                <Text size="md" fw={500}>Daily: 08:00 AM - 08:00 PM</Text>
+                                                <Text size="sm" fw={700} className="text-slate-700">Daily: 08:00 AM - 08:00 PM</Text>
                                             </Group>
                                         </Stack>
 
@@ -187,8 +187,8 @@ const LocationPage = () => {
                                             mt={30}
                                             size="lg"
                                             radius="md"
-                                            className="gradient-button"
-                                            rightSection={<ArrowRight size={20} />}
+                                            className="bg-indigo-600 hover:bg-indigo-700 text-white font-extrabold tracking-wide h-13 shadow-md shadow-indigo-600/10 rounded-xl"
+                                            rightSection={<ArrowRight size={18} />}
                                             onClick={() => navigate('/book', { state: { centerId: center.id } })}
                                         >
                                             Book At This Center

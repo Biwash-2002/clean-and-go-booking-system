@@ -10,6 +10,7 @@ import { Car, MapPin, User, Smartphone, CheckCircle, Clock, Map as MapIcon, Navi
 import Layout from '../components/Layout';
 import { motion } from 'framer-motion';
 import { notifications } from '@mantine/notifications';
+import ErrorBoundary from '../components/ErrorBoundary';
 
 interface Booking {
     id: string;
@@ -30,7 +31,61 @@ interface Booking {
     vehicleNumber?: string;
     bookingType?: string;
     message?: string;
+    package?: string;
 }
+
+const getStartOfToday = () => {
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    return today;
+};
+
+const timeToMinutes = (timeStr: string): number => {
+    const match = timeStr.match(/^(\d{2}):(\d{2})\s*(AM|PM)$/i);
+    if (!match) return 0;
+    let hours = parseInt(match[1], 10);
+    const minutes = parseInt(match[2], 10);
+    const period = match[3].toUpperCase();
+    
+    if (period === 'PM' && hours < 12) {
+        hours += 12;
+    } else if (period === 'AM' && hours === 12) {
+        hours = 0;
+    }
+    
+    return hours * 60 + minutes;
+};
+
+const minutesToTimeStr = (totalMinutes: number): string => {
+    const hours = Math.floor(totalMinutes / 60);
+    const minutes = totalMinutes % 60;
+    const period = hours >= 12 ? 'PM' : 'AM';
+    const displayHours = hours > 12 ? hours - 12 : (hours === 0 ? 12 : hours);
+    return `${displayHours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')} ${period}`;
+};
+
+const isToday = (dateVal: any): boolean => {
+    if (!dateVal) return false;
+    const date = dateVal instanceof Date ? dateVal : new Date(dateVal);
+    if (isNaN(date.getTime())) return false;
+    const today = new Date();
+    return date.toDateString() === today.toDateString();
+};
+
+const getCurrentTimeMinutes = (): number => {
+    const now = new Date();
+    return now.getHours() * 60 + now.getMinutes();
+};
+
+const isSlotOverlapping = (
+    candidateStart: number,
+    candidateDuration: number,
+    bookedIntervals: { start: number; end: number }[]
+): boolean => {
+    return bookedIntervals.some(interval => {
+        return candidateStart < interval.end && (candidateStart + candidateDuration) > interval.start;
+    });
+};
 
 const BookingPage = () => {
     const navigate = useNavigate();
@@ -40,7 +95,10 @@ const BookingPage = () => {
         const stored = localStorage.getItem('car_wash_bookings');
         if (stored) {
             try {
-                return JSON.parse(stored);
+                const parsed = JSON.parse(stored);
+                if (Array.isArray(parsed)) {
+                    return parsed;
+                }
             } catch (e) {
                 console.error('Failed to load bookings', e);
             }
@@ -52,27 +110,14 @@ const BookingPage = () => {
         // Initialization moved to useState lazy initializer
     }, []);
 
-    const getBookedSlots = (date: Date | null, centerId: string) => {
-        if (!date || !centerId) return [];
-        const dateString = date.toLocaleDateString();
-        return bookings
-            .filter(b => b.bookingDate && new Date(b.bookingDate).toLocaleDateString() === dateString && b.center === centerId)
-            .map(b => b.timeSlot);
-    };
-
     const generateTimeSlots = (duration: number) => {
-        const slots = [];
+        const slots: string[] = [];
         let currentMinutes = 8 * 60; // 08:00 AM
         const endMinutes = 20 * 60; // 08:00 PM
 
         while (currentMinutes <= (endMinutes - duration)) {
-            const hours = Math.floor(currentMinutes / 60);
-            const minutes = currentMinutes % 60;
-            const period = hours >= 12 ? 'PM' : 'AM';
-            const displayHours = hours > 12 ? hours - 12 : (hours === 0 ? 12 : hours);
-            const timeString = `${displayHours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')} ${period}`;
-            slots.push(timeString);
-            currentMinutes += 30; // 30 min intervals
+            slots.push(minutesToTimeStr(currentMinutes));
+            currentMinutes += 15; // 15-minute increments for dynamic booking options
         }
         return slots;
     };
@@ -99,15 +144,15 @@ const BookingPage = () => {
 
     return (
         <Layout>
-            <div className="py-12 bg-gray-50 min-h-screen">
+            <div className="py-16 bg-slate-50 min-h-screen">
                 <Container size="lg">
                     <motion.div
                         initial={{ opacity: 0, y: -20 }}
                         animate={{ opacity: 1, y: 0 }}
                         transition={{ duration: 0.5 }}
                     >
-                        <Title order={1} mb="2.5rem" ta="center" className="text-4xl font-extrabold tracking-tight">
-                            Reserve Your <span className="text-primary-600">Perfect Clean</span>
+                        <Title order={1} mb="3rem" ta="center" className="text-4xl md:text-5xl font-black font-sans uppercase tracking-tight text-slate-900">
+                            Reserve Your <span className="text-indigo-600">Perfect Clean</span>
                         </Title>
                     </motion.div>
 
@@ -142,21 +187,60 @@ const BookingPage = () => {
                                 return;
                             }
 
+                            const pkg = WASH_PACKAGES.find(p => p.id === values.package);
+                            const center = WASHING_CENTERS.find((c) => c.id === values.center);
+                            const bDate = values.bookingDate ? (values.bookingDate instanceof Date ? values.bookingDate : new Date(values.bookingDate)) : null;
+
+                            if (!bDate || isNaN(bDate.getTime()) || !values.center || !pkg) {
+                                notifications.show({
+                                    title: 'Invalid Booking Data',
+                                    message: 'Please fill in all details before confirming.',
+                                    color: 'red'
+                                });
+                                return;
+                            }
+
+                            // Calculate overlapping bookings
+                            const bookedIntervals = bookings
+                                .filter(b => {
+                                    if (!b || !b.bookingDate || !b.center) return false;
+                                    const existingDate = new Date(b.bookingDate);
+                                    if (isNaN(existingDate.getTime())) return false;
+                                    return existingDate.toLocaleDateString() === bDate.toLocaleDateString() && b.center === values.center;
+                                })
+                                .map(b => {
+                                    const start = timeToMinutes(b.timeSlot);
+                                    const bookedPkg = WASH_PACKAGES.find(p => p.id === b.package || p.name === b.packageName);
+                                    const duration = bookedPkg ? bookedPkg.duration : 30;
+                                    return { start, end: start + duration };
+                                });
+
+                            const slotMinutes = timeToMinutes(values.timeSlot);
+                            const isOverlapping = isSlotOverlapping(slotMinutes, pkg.duration, bookedIntervals);
+                            const isPast = isToday(bDate) && slotMinutes <= getCurrentTimeMinutes();
+
+                            if (isOverlapping || isPast) {
+                                notifications.show({
+                                    title: 'Slot Unavailable',
+                                    message: 'The selected time slot overlaps with another booking or is in the past. Please choose a different slot.',
+                                    color: 'red',
+                                    autoClose: 5000
+                                });
+                                return;
+                            }
+
                             setIsSubmitting(true);
                             setTimeout(() => {
-                                const pkg = WASH_PACKAGES.find(p => p.id === values.package);
-                                const center = WASHING_CENTERS.find((c) => c.id === values.center);
-
-                                const newBooking: Booking = {
-                                    ...values,
-                                    id: Math.random().toString(36).substr(2, 6).toUpperCase(),
-                                    packageName: pkg?.name || '',
-                                    price: pkg?.price || 0,
-                                    centerName: center?.name || '',
-                                    status: 'Confirmed',
-                                    createdAt: new Date().toISOString(),
-                                    bookingDate: values.bookingDate ? values.bookingDate.toISOString() : ''
-                                };
+                                 const newBooking: Booking = {
+                                     ...values,
+                                     id: Math.random().toString(36).substr(2, 6).toUpperCase(),
+                                     packageName: pkg?.name || '',
+                                     price: pkg?.price || 0,
+                                     centerName: center?.name || '',
+                                     status: 'Confirmed',
+                                     createdAt: new Date().toISOString(),
+                                     bookingDate: bDate.toISOString()
+                                 };
 
                                 const updated = [newBooking, ...bookings];
                                 localStorage.setItem('car_wash_bookings', JSON.stringify(updated));
@@ -170,28 +254,38 @@ const BookingPage = () => {
                         {({ values, touched, errors, setFieldValue, handleSubmit }) => {
                             const currentPkg = WASH_PACKAGES.find(p => p.id === values.package);
                             const currentCenter = WASHING_CENTERS.find((c) => c.id === values.center);
-                            const bookedSlots = getBookedSlots(values.bookingDate, values.center);
+                            
+                            const bookedIntervals = (values.bookingDate && values.center) ? bookings
+                                .filter(b => {
+                                    if (!b || !b.bookingDate || !b.center) return false;
+                                    const bDate = new Date(b.bookingDate);
+                                    if (isNaN(bDate.getTime())) return false;
+                                    
+                                    const selectedDate = values.bookingDate ? (values.bookingDate instanceof Date ? values.bookingDate : new Date(values.bookingDate)) : null;
+                                    if (!selectedDate || isNaN(selectedDate.getTime())) return false;
+                                    
+                                    return bDate.toLocaleDateString() === selectedDate.toLocaleDateString() && b.center === values.center;
+                                })
+                                .map(b => {
+                                    const start = timeToMinutes(b.timeSlot);
+                                    const bookedPkg = WASH_PACKAGES.find(p => p.id === b.package || p.name === b.packageName);
+                                    const duration = bookedPkg ? bookedPkg.duration : 30;
+                                    return { start, end: start + duration };
+                                }) : [];
 
-                                                            const availableSlots = currentPkg ? generateTimeSlots(currentPkg.duration) : [];
+                            const availableSlots = currentPkg ? generateTimeSlots(currentPkg.duration) : [];
 
                             return (
-                                <form onSubmit={(e) => {
-                                    e.preventDefault();
-                                    const submitter = (e.nativeEvent as SubmitEvent).submitter as HTMLElement | null;
-                                    if (!submitter?.dataset?.submitButton) {
-                                        return;
-                                    }
-                                    handleSubmit(e);
-                                }}>
+                                <form onSubmit={handleSubmit}>
                                     <Box pos="relative">
                                         <LoadingOverlay visible={isSubmitting} overlayProps={{ blur: 2 }} zIndex={1000} />
                                         
                                         <Grid gutter="xl">
                                             <Grid.Col span={{ base: 12, md: 7 }}>
                                                 <Stack gap="xl">
-                                                    <Card shadow="sm" radius="xl" padding="xl" className="border-none shadow-blue-50">
-                                                        <Title order={3} mb="xl" size="1.2rem" className="flex items-center gap-3 text-gray-800">
-                                                            <div className="bg-primary-50 p-2 rounded-lg text-primary-600"><User size={20} /></div>
+                                                    <Card padding="xl" className="luxury-card">
+                                                        <Title order={3} mb="xl" size="1.2rem" className="flex items-center gap-3 text-slate-900 font-sans font-black uppercase tracking-tight">
+                                                            <div className="bg-indigo-50 p-2.5 rounded-xl text-indigo-600 shadow-sm"><User size={18} /></div>
                                                             User & Vehicle Information
                                                         </Title>
                                                         <SimpleGrid cols={{ base: 1, sm: 2 }} verticalSpacing="md">
@@ -202,7 +296,8 @@ const BookingPage = () => {
                                                                 onChange={(e) => setFieldValue('firstName', e.target.value)}
                                                                 value={values.firstName}
                                                                 radius="md"
-                                                                labelProps={{ className: 'mb-1 font-semibold text-gray-700' }}
+                                                                size="md"
+                                                                labelProps={{ className: 'mb-1 text-xs font-bold uppercase tracking-wider text-slate-500' }}
                                                             />
                                                             <TextInput
                                                                 label="Last Name"
@@ -211,7 +306,8 @@ const BookingPage = () => {
                                                                 onChange={(e) => setFieldValue('lastName', e.target.value)}
                                                                 value={values.lastName}
                                                                 radius="md"
-                                                                labelProps={{ className: 'mb-1 font-semibold text-gray-700' }}
+                                                                size="md"
+                                                                labelProps={{ className: 'mb-1 text-xs font-bold uppercase tracking-wider text-slate-500' }}
                                                             />
                                                             <TextInput
                                                                 label="Email Address"
@@ -220,7 +316,8 @@ const BookingPage = () => {
                                                                 onChange={(e) => setFieldValue('email', e.target.value)}
                                                                 value={values.email}
                                                                 radius="md"
-                                                                labelProps={{ className: 'mb-1 font-semibold text-gray-700' }}
+                                                                size="md"
+                                                                labelProps={{ className: 'mb-1 text-xs font-bold uppercase tracking-wider text-slate-500' }}
                                                             />
                                                             <TextInput
                                                                 label="Phone Number"
@@ -229,8 +326,9 @@ const BookingPage = () => {
                                                                 onChange={(e) => setFieldValue('phone', e.target.value)}
                                                                 value={values.phone}
                                                                 radius="md"
-                                                                leftSection={<Smartphone size={16} className="text-gray-400" />}
-                                                                labelProps={{ className: 'mb-1 font-semibold text-gray-700' }}
+                                                                size="md"
+                                                                leftSection={<Smartphone size={16} className="text-slate-400" />}
+                                                                labelProps={{ className: 'mb-1 text-xs font-bold uppercase tracking-wider text-slate-500' }}
                                                             />
                                                         </SimpleGrid>
                                                         <TextInput
@@ -241,14 +339,15 @@ const BookingPage = () => {
                                                             onChange={(e) => setFieldValue('vehicleNumber', e.target.value)}
                                                             value={values.vehicleNumber}
                                                             radius="md"
-                                                            leftSection={<Car size={16} className="text-gray-400" />}
-                                                            labelProps={{ className: 'mb-1 font-semibold text-gray-700' }}
+                                                            size="md"
+                                                            leftSection={<Car size={18} className="text-slate-400" />}
+                                                            labelProps={{ className: 'mb-1 text-xs font-bold uppercase tracking-wider text-slate-500' }}
                                                         />
                                                     </Card>
 
-                                                    <Card shadow="sm" radius="xl" padding="xl" className="border-none shadow-blue-50">
-                                                        <Title order={3} mb="xl" size="1.2rem" className="flex items-center gap-3 text-gray-800">
-                                                            <div className="bg-primary-50 p-2 rounded-lg text-primary-600"><MapPin size={20} /></div>
+                                                    <Card padding="xl" className="luxury-card">
+                                                        <Title order={3} mb="xl" size="1.2rem" className="flex items-center gap-3 text-slate-900 font-sans font-black uppercase tracking-tight">
+                                                            <div className="bg-indigo-50 p-2.5 rounded-xl text-indigo-600 shadow-sm"><MapPin size={18} /></div>
                                                             Service Location Details
                                                         </Title>
                                                         <TextInput 
@@ -258,19 +357,20 @@ const BookingPage = () => {
                                                             value={values.address}
                                                             readOnly
                                                             radius="md"
+                                                            size="md"
                                                             mb="md"
-                                                            leftSection={<Navigation size={16} className="text-primary-600" />}
+                                                            leftSection={<Navigation size={18} className="text-indigo-600" />}
                                                             rightSection={
-                                                                <ActionIcon variant="light" color="blue" onClick={() => {
+                                                                <ActionIcon type="button" variant="light" color="indigo" onClick={() => {
                                                                     notifications.show({title: 'Location Tool', message: 'Click anywhere on the map below to set your exact address.'});
                                                                 }}>
                                                                     <MapIcon size={16} />
                                                                 </ActionIcon>
                                                             }
-                                                            labelProps={{ className: 'mb-1 font-semibold text-gray-700' }}
+                                                            labelProps={{ className: 'mb-1 text-xs font-bold uppercase tracking-wider text-slate-500' }}
                                                         />
                                                         
-                                                        <div className="rounded-2xl overflow-hidden border border-gray-100 shadow-inner" style={{ height: '350px' }}>
+                                                        <div className="rounded-[1.5rem] overflow-hidden border border-slate-100 shadow-inner" style={{ height: '350px' }}>
                                                             <GoogleMapComponent
                                                                 selectable
                                                                 onLocationSelect={(coords, address) => {
@@ -279,7 +379,7 @@ const BookingPage = () => {
                                                                     notifications.show({
                                                                         title: 'Location Captured',
                                                                         message: 'Address auto-filled from map selection.',
-                                                                        color: 'blue'
+                                                                        color: 'indigo'
                                                                     });
                                                                 }}
                                                                 locations={WASHING_CENTERS.map(c => ({
@@ -292,7 +392,7 @@ const BookingPage = () => {
                                                                 }))}
                                                             />
                                                         </div>
-                                                        <Text size="xs" mt="sm" c="dimmed" fs="italic">
+                                                        <Text size="xs" mt="sm" c="dimmed" fs="italic" fw={600} className="text-slate-400">
                                                             Tip: You can select a center from map or pick any custom location.
                                                         </Text>
                                                     </Card>
@@ -301,9 +401,9 @@ const BookingPage = () => {
 
                                             <Grid.Col span={{ base: 12, md: 5 }}>
                                                 <Stack gap="xl">
-                                                    <Card shadow="sm" radius="xl" padding="xl" className="border-none shadow-blue-50">
-                                                        <Title order={3} mb="xl" size="1.2rem" className="flex items-center gap-3 text-gray-800">
-                                                            <div className="bg-primary-50 p-2 rounded-lg text-primary-600"><Clock size={20} /></div>
+                                                    <Card padding="xl" className="luxury-card">
+                                                        <Title order={3} mb="xl" size="1.2rem" className="flex items-center gap-3 text-slate-900 font-sans font-black uppercase tracking-tight">
+                                                            <div className="bg-indigo-50 p-2.5 rounded-xl text-indigo-600 shadow-sm"><Clock size={18} /></div>
                                                             Service & Schedule
                                                         </Title>
                                                         
@@ -315,19 +415,25 @@ const BookingPage = () => {
                                                                 onChange={(val) => {
                                                                     setFieldValue('bookingType', val || 'one-time');
                                                                     setFieldValue('package', '');
+                                                                    setFieldValue('timeSlot', '');
                                                                 }}
                                                                 radius="md"
-                                                                labelProps={{ className: 'mb-1 font-semibold text-gray-700' }}
+                                                                size="md"
+                                                                labelProps={{ className: 'mb-1 text-xs font-bold uppercase tracking-wider text-slate-500' }}
                                                             />
                                                             <Select
                                                                 label="Select Package"
                                                                 placeholder="Pick a package"
                                                                 data={WASH_PACKAGES.filter(p => p.planType === values.bookingType).map(p => ({ value: p.id, label: p.name }))}
-                                                                 value={values.package}
-                                                                onChange={(val) => setFieldValue('package', val || '')}
+                                                                value={values.package}
+                                                                onChange={(val) => {
+                                                                    setFieldValue('package', val || '');
+                                                                    setFieldValue('timeSlot', '');
+                                                                }}
                                                                 error={touched.package && (errors.package as string)}
                                                                 radius="md"
-                                                                labelProps={{ className: 'mb-1 font-semibold text-gray-700' }}
+                                                                size="md"
+                                                                labelProps={{ className: 'mb-1 text-xs font-bold uppercase tracking-wider text-slate-500' }}
                                                             />
                                                             <Select
                                                                 label="Select Washing Center"
@@ -340,82 +446,129 @@ const BookingPage = () => {
                                                                 }}
                                                                 error={touched.center && (errors.center as string)}
                                                                 radius="md"
-                                                                labelProps={{ className: 'mb-1 font-semibold text-gray-700' }}
+                                                                size="md"
+                                                                labelProps={{ className: 'mb-1 text-xs font-bold uppercase tracking-wider text-slate-500' }}
                                                             />
                                                             
-                                                            <Divider my="sm" />
-
+                                                            <Divider my="xs" className="border-slate-100" />
+ 
                                                             <DatePickerInput
                                                                 label="Booking Date"
                                                                 placeholder="Pick a date"
-                                                                value={values.bookingDate}
+                                                                value={values.bookingDate ? (values.bookingDate instanceof Date ? values.bookingDate : new Date(values.bookingDate)) : null}
                                                                 onChange={(val) => {
                                                                     setFieldValue('bookingDate', val);
                                                                     setFieldValue('timeSlot', '');
                                                                 }}
                                                                 error={touched.bookingDate && (errors.bookingDate as string)}
                                                                 radius="md"
-                                                                minDate={new Date()}
+                                                                size="md"
+                                                                minDate={getStartOfToday()}
                                                                 hideOutsideDates
-                                                                labelProps={{ className: 'mb-1 font-semibold text-gray-700' }}
+                                                                labelProps={{ className: 'mb-1 text-xs font-bold uppercase tracking-wider text-slate-500' }}
                                                             />
 
-                                                            <Text size="sm" fw={600} mb="xs" className="text-gray-700">Available Time Slots</Text>
+                                                            <Text size="xs" fw={700} className="text-slate-500 uppercase tracking-wider mb-0.5">Available Time Slots</Text>
                                                             <div className="grid grid-cols-3 gap-2 max-h-48 overflow-y-auto p-1 custom-scrollbar">
                                                                 {values.package ? (
-                                                                    availableSlots.map(slot => {
-                                                                        const isBooked = bookedSlots.includes(slot);
-                                                                        const isSelected = values.timeSlot === slot;
-                                                                        return (
-                                                                            <button
-                                                                                key={slot}
-                                                                                type="button"
-                                                                                disabled={isBooked}
-                                                                                onClick={() => setFieldValue('timeSlot', slot)}
-                                                                                className={`py-2 px-1 text-xs font-semibold rounded-lg transition-all
-                                                                                    ${isBooked ? 'bg-gray-100 text-gray-400 cursor-not-allowed italic' : 
-                                                                                      isSelected ? 'bg-primary-600 text-white shadow-md shadow-primary-200' : 
-                                                                                      'bg-white border border-gray-200 text-gray-700 hover:border-primary-400 hover:bg-primary-50'}`}
-                                                                            >
-                                                                                {slot}
-                                                                            </button>
-                                                                        );
-                                                                    })
+                                                                    (() => {
+                                                                        const validSlots = availableSlots.filter(slot => {
+                                                                            const slotMinutes = timeToMinutes(slot);
+                                                                            const isOverlapping = currentPkg ? isSlotOverlapping(slotMinutes, currentPkg.duration, bookedIntervals) : false;
+                                                                            const isPast = isToday(values.bookingDate) && slotMinutes <= getCurrentTimeMinutes();
+                                                                            return !isOverlapping && !isPast;
+                                                                        });
+
+                                                                        if (validSlots.length === 0) {
+                                                                            return (
+                                                                                <div className="col-span-3 py-6 text-center text-red-500 bg-red-50/50 rounded-xl border border-dashed border-red-100">
+                                                                                    <Clock size={18} className="mx-auto mb-1 opacity-70" />
+                                                                                    <Text size="xs" fw={700}>No slots available for this date</Text>
+                                                                                </div>
+                                                                            );
+                                                                        }
+
+                                                                        return validSlots.map(slot => {
+                                                                            const isSelected = values.timeSlot === slot;
+                                                                            return (
+                                                                                <button
+                                                                                    key={slot}
+                                                                                    type="button"
+                                                                                    onClick={() => setFieldValue('timeSlot', slot)}
+                                                                                    className={`py-2 px-1 text-xs font-bold rounded-xl transition-all duration-200 border
+                                                                                        ${isSelected ? 'bg-indigo-600 text-white shadow-md shadow-indigo-600/20 border-indigo-600' : 
+                                                                                          'bg-white border-slate-200 text-slate-700 hover:border-indigo-400 hover:bg-indigo-50/40'}`}
+                                                                                >
+                                                                                    {slot}
+                                                                                </button>
+                                                                            );
+                                                                        });
+                                                                    })()
                                                                 ) : (
-                                                                    <div className="col-span-3 py-6 text-center text-gray-400 bg-gray-50 rounded-xl border border-dashed border-gray-200">
-                                                                        <Clock size={20} className="mx-auto mb-2 opacity-50" />
-                                                                        <Text size="xs">Select package for slots</Text>
+                                                                    <div className="col-span-3 py-6 text-center text-slate-400 bg-slate-50/50 rounded-xl border border-dashed border-slate-200">
+                                                                        <Clock size={18} className="mx-auto mb-1 opacity-50" />
+                                                                        <Text size="xs" fw={700}>Select package for slots</Text>
                                                                     </div>
                                                                 )}
                                                             </div>
                                                             {touched.timeSlot && errors.timeSlot && (
-                                                                <Text size="xs" mt="xs" c="red">{errors.timeSlot}</Text>
+                                                                <Text size="xs" mt="xs" c="red" fw={600}>{errors.timeSlot}</Text>
                                                             )}
                                                         </Stack>
                                                     </Card>
 
-                                                    <Card shadow="xl" radius="xl" padding="xl" className="border-none bg-primary-600 text-white overflow-hidden relative">
-                                                        <div className="absolute -right-8 -top-8 w-32 h-32 bg-white/10 rounded-full blur-3xl"></div>
-                                                        <div className="absolute -left-8 -bottom-8 w-32 h-32 bg-white/10 rounded-full blur-3xl"></div>
-                                                        <Title order={3} mb="xl" size="1.2rem">Booking Summary</Title>
-                                                        <div className="space-y-4 relative z-10">
-                                                            <div className="flex justify-between items-center pb-3 border-b border-white/10">
-                                                                <Text size="sm" className="opacity-80">Package</Text>
-                                                                <Text fw={700} size="sm">{currentPkg?.name || '---'}</Text>
+                                                    <Card padding="xl" className="invoice-container border-none overflow-hidden relative">
+                                                        <div className="absolute -right-8 -top-8 w-32 h-32 bg-white/5 rounded-full blur-3xl"></div>
+                                                        <div className="absolute -left-8 -bottom-8 w-32 h-32 bg-white/5 rounded-full blur-3xl"></div>
+                                                        
+                                                        <div className="invoice-header mb-6 relative z-10">
+                                                            <Title order={3} size="1.25rem" className="text-white uppercase tracking-wider font-sans font-black flex justify-between items-center">
+                                                                <span>Booking Summary</span>
+                                                                <span className="luxury-badge gold" style={{ border: 'none', background: 'rgba(245,158,11,0.15)', color: '#fbbf24' }}>Invoice</span>
+                                                            </Title>
+                                                        </div>
+
+                                                        <div className="space-y-1 relative z-10 mb-8">
+                                                            <div className="invoice-item">
+                                                                <Text size="xs" className="text-slate-400 font-bold uppercase tracking-wider">Plan Type</Text>
+                                                                <Text fw={700} size="sm" className="text-white">
+                                                                    {values.bookingType === 'subscription' ? 'Monthly Membership' : 'One-Time Wash'}
+                                                                </Text>
                                                             </div>
-                                                            <div className="flex justify-between items-center pb-3 border-b border-white/10">
-                                                                <Text size="sm" className="opacity-80">Center</Text>
-                                                                <Text fw={700} size="sm">{currentCenter?.name || '---'}</Text>
+                                                            <div className="invoice-item">
+                                                                <Text size="xs" className="text-slate-400 font-bold uppercase tracking-wider">Selected Package</Text>
+                                                                <Text fw={700} size="sm" className="text-indigo-300">{currentPkg?.name || '---'}</Text>
                                                             </div>
-                                                            <div className="flex justify-between items-center pb-3 border-b border-white/10">
-                                                                <Text size="sm" className="opacity-80">Scheduled At</Text>
-                                                                <Text fw={700} size="sm">{values.timeSlot || '---'}</Text>
+                                                            <div className="invoice-item">
+                                                                <Text size="xs" className="text-slate-400 font-bold uppercase tracking-wider">Washing Center</Text>
+                                                                <Text fw={700} size="sm" className="text-white">{currentCenter?.name || '---'}</Text>
                                                             </div>
-                                                            <div className="flex justify-between items-center pt-2">
-                                                                <Text size="lg" fw={800}>Total Price</Text>
-                                                                <Text size="xl" fw={900}>Rs. {currentPkg?.price || 0}</Text>
+                                                            <div className="invoice-item">
+                                                                <Text size="xs" className="text-slate-400 font-bold uppercase tracking-wider">Address & Location</Text>
+                                                                <Text fw={600} size="xs" className="text-slate-300 max-w-[200px] truncate">{values.address || '---'}</Text>
+                                                            </div>
+                                                            <div className="invoice-item">
+                                                                <Text size="xs" className="text-slate-400 font-bold uppercase tracking-wider">Date & Time</Text>
+                                                                <Text fw={700} size="sm" className="text-white">
+                                                                    {values.bookingDate ? new Date(values.bookingDate).toLocaleDateString() : '---'} {values.timeSlot ? `@ ${values.timeSlot}` : ''}
+                                                                </Text>
+                                                            </div>
+                                                            <div className="invoice-item">
+                                                                <Text size="xs" className="text-slate-400 font-bold uppercase tracking-wider">Vehicle ID</Text>
+                                                                <Text fw={700} size="sm" className="font-mono text-white">{values.vehicleNumber || '---'}</Text>
                                                             </div>
                                                         </div>
+
+                                                        <div className="invoice-total relative z-10">
+                                                            <div className="flex justify-between items-center">
+                                                                <div>
+                                                                    <Text size="sm" fw={800} className="text-white uppercase tracking-wider">Total Price</Text>
+                                                                    <Text size="xs" className="text-slate-400">Inclusive of VAT & Fees</Text>
+                                                                </div>
+                                                                <Text size="2rem" fw={900} className="text-amber-400 font-sans">Rs. {currentPkg?.price || 0}</Text>
+                                                            </div>
+                                                        </div>
+
                                                         <Button 
                                                             fullWidth 
                                                             size="lg" 
@@ -423,14 +576,14 @@ const BookingPage = () => {
                                                             radius="md" 
                                                             type="submit" 
                                                             data-submit-button="true"
-                                                            className="bg-white text-primary-600 hover:bg-gray-50 font-bold h-14"
+                                                            className="bg-white text-indigo-950 hover:bg-slate-50 font-black tracking-wide h-14 transition-all shadow-lg rounded-xl"
                                                             disabled={isSubmitting}
-                                                            leftSection={<CheckCircle size={20} />}
+                                                            leftSection={<CheckCircle size={20} className="text-green-600" />}
                                                         >
                                                             Confirm Booking
                                                         </Button>
-                                                        <Text size="xs" mt="md" className="text-center opacity-70 italic">
-                                                            Final price includes taxes and fees.
+                                                        <Text size="xs" mt="md" className="text-center text-slate-400 italic">
+                                                            A digital copy of invoice will be sent upon scheduling.
                                                         </Text>
                                                     </Card>
                                                 </Stack>
@@ -447,4 +600,10 @@ const BookingPage = () => {
     );
 };
 
-export default BookingPage;
+const BookingPageWithErrorBoundary = () => (
+    <ErrorBoundary>
+        <BookingPage />
+    </ErrorBoundary>
+);
+
+export default BookingPageWithErrorBoundary;

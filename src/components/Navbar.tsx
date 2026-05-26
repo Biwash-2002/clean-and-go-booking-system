@@ -23,7 +23,14 @@ const Navbar = () => {
     useEffect(() => {
         const token = !!localStorage.getItem('token');
         const storedUser = localStorage.getItem('car_wash_user');
-        const parsedUser = storedUser ? JSON.parse(storedUser) : null;
+        let parsedUser = null;
+        if (storedUser) {
+            try {
+                parsedUser = JSON.parse(storedUser);
+            } catch (e) {
+                console.error('Failed to parse user in Navbar useEffect', e);
+            }
+        }
         
         Promise.resolve().then(() => {
             if (isLoggedIn !== token) {
@@ -67,9 +74,9 @@ const Navbar = () => {
             key={link.label}
             component={Link}
             to={link.link}
-            className={`px-4 py-2 rounded-xl text-sm font-bold transition-all duration-300 ${isActive(link.link)
-                    ? 'bg-primary-50 text-primary-600'
-                    : 'text-gray-600 hover:text-primary-600 hover:bg-gray-50'
+            className={`px-4 py-2 rounded-xl text-sm font-bold tracking-tight transition-all duration-300 ${isActive(link.link)
+                    ? 'bg-indigo-50/80 text-indigo-600'
+                    : 'text-slate-600 hover:text-indigo-600 hover:bg-slate-50/60'
                 }`}
             onClick={close}
         >
@@ -78,31 +85,31 @@ const Navbar = () => {
     ));
 
     return (
-        <Box component="header" className="h-[80px] border-b border-gray-100 bg-white/95 backdrop-blur-md sticky top-0 z-[1000] flex items-center shadow-sm shadow-gray-100/50">
+        <Box component="header" className="h-[80px] border-b border-slate-100 bg-white/80 backdrop-blur-lg sticky top-0 z-[1000] flex items-center shadow-sm shadow-slate-100/30">
             <Container size="lg" h="100%" className="w-full">
                 <Group justify="space-between" h="100%">
                     <Group gap="xs" className="cursor-pointer group" onClick={() => navigate('/')}>
-                        <div className="bg-primary-600 p-2 rounded-xl text-blue-500 group-hover:scale-110 group-hover:rotate-6 transition-all duration-300 shadow-lg shadow-primary-200">
-                            <Car size={24} />
+                        <div className="bg-indigo-600 p-2.5 rounded-2xl text-white group-hover:scale-105 group-hover:-rotate-3 transition-all duration-300 shadow-lg shadow-indigo-500/20">
+                            <Car size={22} />
                         </div>
-                        <Text className="text-xl font-black tracking-tighter text-gray-900 group-hover:text-primary-600 transition-colors uppercase">
-                            CLEAN <span className="text-primary-600">&</span> GO
+                        <Text className="text-xl font-black tracking-tight text-slate-900 group-hover:text-indigo-600 transition-colors uppercase font-sans">
+                            Clean <span className="text-indigo-600">&</span> Go
                         </Text>
                     </Group>
 
-                    <Group gap={20} visibleFrom="sm">
+                    <Group gap={12} visibleFrom="sm">
                         {items}
                     </Group>
 
-                    <Group visibleFrom="sm" gap="lg">
+                    <Group visibleFrom="sm" gap="md">
                         {isLoggedIn ? (
                             <Menu shadow="md" width={220} position="bottom-end" radius="lg">
                                 <Menu.Target>
-                                    <div className="flex items-center gap-3 cursor-pointer hover:bg-gray-50 p-1 pr-3 rounded-2xl transition-all">
-                                        <Avatar size="sm" src={user?.avatar} radius="xl" className="border-2 border-primary-50" />
+                                    <div className="flex items-center gap-3 cursor-pointer hover:bg-slate-50/80 p-1.5 pr-3 rounded-2xl transition-all border border-slate-100 bg-white">
+                                        <Avatar size="sm" src={user?.avatar} radius="xl" className="border-2 border-indigo-50" />
                                         <div className="hidden md:block">
-                                            <Text size="sm" fw={800} className="text-gray-900 leading-tight">{user?.name || 'User'}</Text>
-                                            <Text size="xs" className="text-gray-400">Premium Member</Text>
+                                            <Text size="sm" fw={800} className="text-slate-900 leading-none">{user?.name || 'User'}</Text>
+                                            <Text size="xs" className="text-amber-500 font-extrabold uppercase tracking-widest mt-0.5" style={{ fontSize: '9px' }}>Premium</Text>
                                         </div>
                                     </div>
                                 </Menu.Target>
@@ -121,22 +128,22 @@ const Navbar = () => {
                                 </Menu.Dropdown>
                             </Menu>
                         ) : (
-                            <Group gap="sm">
-                                <Button variant="subtle" color="gray" leftSection={<LogIn size={18} />} onClick={() => navigate('/login')}>Login</Button>
-                                <Button variant="light" color="blue" leftSection={<UserPlus size={18} />} onClick={() => navigate('/register')}>Sign Up</Button>
+                            <Group gap="xs">
+                                <Button variant="subtle" color="slate" leftSection={<LogIn size={16} />} onClick={() => navigate('/login')} className="font-bold text-slate-600 hover:text-indigo-600 rounded-xl">Login</Button>
+                                <Button variant="light" color="indigo" leftSection={<UserPlus size={16} />} onClick={() => navigate('/register')} className="font-bold rounded-xl">Sign Up</Button>
                             </Group>
                         )}
 
                         <Button
-                            className="bg-primary-600 hover:bg-primary-700 h-12 px-6 rounded-xl font-bold font-sans tracking-wide shadow-md shadow-primary-200"
+                            className="bg-indigo-600 hover:bg-indigo-700 h-12 px-6 rounded-xl font-bold font-sans tracking-wide shadow-md shadow-indigo-600/10 transition-all hover:shadow-indigo-600/20"
                             onClick={() => navigate('/book')}
-                            leftSection={<Calendar size={18} />}
+                            leftSection={<Calendar size={16} />}
                         >
                             Book Now
                         </Button>
                     </Group>
 
-                    <Burger opened={opened} onClick={toggle} hiddenFrom="sm" size="sm" className="text-gray-600" />
+                    <Burger opened={opened} onClick={toggle} hiddenFrom="sm" size="sm" className="text-slate-600" />
                 </Group>
             </Container>
 
@@ -145,7 +152,7 @@ const Navbar = () => {
                 onClose={close}
                 size="100%"
                 padding="xl"
-                title={<Text className="text-xl font-black text-primary-600 tracking-tighter uppercase">Menu</Text>}
+                title={<Text className="text-xl font-black text-indigo-600 tracking-tight uppercase">Menu</Text>}
                 hiddenFrom="sm"
                 styles={{
                     content: { backgroundColor: '#fff' },
@@ -159,10 +166,11 @@ const Navbar = () => {
                         <>
                             <Button
                                 variant="light"
+                                color="indigo"
                                 size="lg"
                                 fullWidth
                                 radius="xl"
-                                className="bg-primary-50 text-primary-600 hover:bg-primary-100 h-14"
+                                className="h-14 font-bold"
                                 onClick={() => { navigate('/profile'); close(); }}
                                 leftSection={<User size={18} />}
                             >
@@ -174,7 +182,7 @@ const Navbar = () => {
                                 size="lg"
                                 fullWidth
                                 radius="xl"
-                                className="h-14"
+                                className="h-14 font-bold"
                                 onClick={handleLogout}
                                 leftSection={<LogOut size={18} />}
                             >
@@ -185,9 +193,11 @@ const Navbar = () => {
                         <>
                             <Button
                                 variant="light"
+                                color="indigo"
                                 size="lg"
                                 fullWidth
                                 radius="xl"
+                                className="h-14 font-bold"
                                 onClick={() => { navigate('/login'); close(); }}
                                 leftSection={<LogIn size={18} />}
                             >
@@ -195,9 +205,11 @@ const Navbar = () => {
                             </Button>
                             <Button
                                 variant="outline"
+                                color="indigo"
                                 size="lg"
                                 fullWidth
                                 radius="xl"
+                                className="h-14 font-bold"
                                 onClick={() => { navigate('/register'); close(); }}
                                 leftSection={<UserPlus size={18} />}
                             >
@@ -207,9 +219,10 @@ const Navbar = () => {
                     )}
                     <Button
                         size="lg"
+                        color="indigo"
                         fullWidth
                         radius="xl"
-                        className="bg-primary-600 hover:bg-primary-700 h-14"
+                        className="bg-indigo-600 hover:bg-indigo-700 h-14 font-bold shadow-md shadow-indigo-600/10"
                         onClick={() => { navigate('/book'); close(); }}
                         leftSection={<Calendar size={18} />}
                     >
