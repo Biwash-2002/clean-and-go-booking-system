@@ -5,6 +5,7 @@ import { Mail, Phone, MapPin, Calendar, Trash2, Edit2, ShieldCheck, Zap, Downloa
 import { motion } from 'framer-motion';
 import { notifications } from '@mantine/notifications';
 import Layout from '../components/Layout';
+import { loadUserBookings, saveUserBookings } from '../utils/bookingStorage';
 
 interface Booking {
     id: string;
@@ -46,20 +47,8 @@ const ProfilePage = () => {
             avatar: 'https://ui-avatars.com/api/?name=Clean+User'
         };
     });
-    const [bookings, setBookings] = useState<Booking[]>(() => {
-        const storedBookings = localStorage.getItem('car_wash_bookings');
-        if (storedBookings) {
-            try {
-                const parsed = JSON.parse(storedBookings);
-                if (Array.isArray(parsed)) {
-                    return parsed;
-                }
-            } catch (e) {
-                console.error('Failed to parse bookings', e);
-            }
-        }
-        return [];
-    });
+    // Load only THIS user's bookings from the per-user scoped key
+    const [bookings, setBookings] = useState<Booking[]>(() => loadUserBookings<Booking>());
 
     useEffect(() => {
         // Auth Guard
@@ -72,7 +61,7 @@ const ProfilePage = () => {
     const handleCancel = (id: string) => {
         if (window.confirm('Are you sure you want to cancel this booking?')) {
             const updated = bookings.map(b => b.id === id ? { ...b, status: 'Cancelled' } : b);
-            localStorage.setItem('car_wash_bookings', JSON.stringify(updated));
+            saveUserBookings(updated);
             setBookings(updated);
             notifications.show({
                 title: 'Booking Cancelled',
@@ -85,6 +74,9 @@ const ProfilePage = () => {
 
     const handleLogout = () => {
         localStorage.removeItem('token');
+        // Clear the session email so bookingStorage no longer resolves a key
+        localStorage.removeItem('car_wash_logged_in_email');
+        localStorage.removeItem('car_wash_user');
         notifications.show({
             title: 'Logged Out',
             message: 'Successfully logged out.',

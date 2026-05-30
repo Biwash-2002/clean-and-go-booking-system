@@ -11,6 +11,7 @@ import Layout from '../components/Layout';
 import { motion } from 'framer-motion';
 import { notifications } from '@mantine/notifications';
 import ErrorBoundary from '../components/ErrorBoundary';
+import { loadUserBookings, addUserBooking } from '../utils/bookingStorage';
 
 interface Booking {
     id: string;
@@ -91,20 +92,7 @@ const BookingPage = () => {
     const navigate = useNavigate();
     const routerLocation = useLocation();
     const [isSubmitting, setIsSubmitting] = useState(false);
-    const [bookings, setBookings] = useState<Booking[]>(() => {
-        const stored = localStorage.getItem('car_wash_bookings');
-        if (stored) {
-            try {
-                const parsed = JSON.parse(stored);
-                if (Array.isArray(parsed)) {
-                    return parsed;
-                }
-            } catch (e) {
-                console.error('Failed to load bookings', e);
-            }
-        }
-        return [];
-    });
+    const [bookings, setBookings] = useState<Booking[]>(() => loadUserBookings<Booking>());
 
     useEffect(() => {
         // Initialization moved to useState lazy initializer
@@ -242,8 +230,8 @@ const BookingPage = () => {
                                      bookingDate: bDate.toISOString()
                                  };
 
-                                const updated = [newBooking, ...bookings];
-                                localStorage.setItem('car_wash_bookings', JSON.stringify(updated));
+                                // Save to THIS user's scoped booking history
+                                const updated = addUserBooking<Booking>(newBooking);
                                 setBookings(updated);
                                 
                                 setIsSubmitting(false);

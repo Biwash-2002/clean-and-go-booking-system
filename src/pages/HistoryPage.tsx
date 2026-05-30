@@ -6,6 +6,7 @@ import Layout from '../components/Layout';
 import { Calendar, Package, User, Car, Trash2, Search, XCircle, MoreVertical, Eye, Download, Clock, SlidersHorizontal } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { notifications } from '@mantine/notifications';
+import { loadUserBookings, saveUserBookings } from '../utils/bookingStorage';
 
 interface Booking {
     id: string;
@@ -35,28 +36,19 @@ const formatDateSafely = (dateStr: string) => {
 
 const HistoryPage = () => {
     const [bookings, setBookings] = useState<Booking[]>(() => {
-        const stored = localStorage.getItem('car_wash_bookings');
-        if (stored) {
-            try {
-                const parsed = JSON.parse(stored);
-                if (Array.isArray(parsed)) {
-                    const sanitized = parsed.map((b: Booking) => ({
-                        ...b,
-                        price: b?.price || 0,
-                        status: b?.status || 'Confirmed'
-                    }));
-                    sanitized.sort((a: Booking, b: Booking) => {
-                        const aTime = a?.createdAt ? new Date(a.createdAt).getTime() : 0;
-                        const bTime = b?.createdAt ? new Date(b.createdAt).getTime() : 0;
-                        return bTime - aTime;
-                    });
-                    return sanitized;
-                }
-            } catch (e) {
-                console.error('Failed to parse bookings', e);
-            }
-        }
-        return [];
+        // Load ONLY this user's bookings — empty array for fresh/new users
+        const userBookings = loadUserBookings<Booking>();
+        const sanitized = userBookings.map((b: Booking) => ({
+            ...b,
+            price: b?.price || 0,
+            status: b?.status || 'Confirmed'
+        }));
+        sanitized.sort((a: Booking, b: Booking) => {
+            const aTime = a?.createdAt ? new Date(a.createdAt).getTime() : 0;
+            const bTime = b?.createdAt ? new Date(b.createdAt).getTime() : 0;
+            return bTime - aTime;
+        });
+        return sanitized;
     });
     const [selectedBooking, setSelectedBooking] = useState<Booking | null>(null);
     const [opened, { open, close }] = useDisclosure(false);
@@ -116,7 +108,7 @@ const HistoryPage = () => {
     const handleCancel = (id: string) => {
         if (window.confirm('Are you sure you want to cancel this booking? This action cannot be undone.')) {
             const updated = bookings.map(b => b.id === id ? { ...b, status: 'Cancelled' } : b);
-            localStorage.setItem('car_wash_bookings', JSON.stringify(updated));
+            saveUserBookings(updated);
             setBookings(updated);
             notifications.show({
                 title: 'Booking Cancelled',
@@ -132,7 +124,7 @@ const HistoryPage = () => {
     const handleDelete = (id: string) => {
         if (window.confirm('Are you sure you want to delete this record from your history?')) {
             const updated = bookings.filter(b => b.id !== id);
-            localStorage.setItem('car_wash_bookings', JSON.stringify(updated));
+            saveUserBookings(updated);
             setBookings(updated);
             notifications.show({
                 title: 'Record Deleted',

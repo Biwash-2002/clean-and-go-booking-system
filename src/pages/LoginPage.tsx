@@ -1,15 +1,26 @@
-import { Container, Card, Title, Text, TextInput, Button, Stack, Box, Group, ThemeIcon, PasswordInput } from '@mantine/core';
+import { Container, Card, Title, Text, TextInput, Button, Stack, Box, Group, ThemeIcon, PasswordInput, Alert } from '@mantine/core';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import Layout from '../components/Layout';
-import { Car, Mail, Lock } from 'lucide-react';
+import { Car, Mail, Lock, AlertCircle } from 'lucide-react';
 import { useFormik } from 'formik';
 import * as Yup from 'yup';
 import { notifications } from '@mantine/notifications';
+import { useState } from 'react';
+
+interface RegisteredUser {
+    email: string;
+    password: string;
+    name: string;
+    phone: string;
+    address: string;
+    avatar: string;
+}
 
 const LoginPage = () => {
     const navigate = useNavigate();
     const location = useLocation();
     const from = location.state?.from || '/profile';
+    const [authError, setAuthError] = useState<string | null>(null);
 
     const formik = useFormik({
         initialValues: {
@@ -24,24 +35,47 @@ const LoginPage = () => {
                 .min(6, 'Password must be at least 6 characters')
                 .required('Password is required'),
         }),
-        onSubmit: (values) => {
-            console.log('Login values:', values);
-            // Mock authentication
+        onSubmit: (values, { setSubmitting }) => {
+            setAuthError(null);
+
+            // Load all registered users from the mock DB
+            const registeredUsers: RegisteredUser[] = JSON.parse(
+                localStorage.getItem('car_wash_registered_users') || '[]'
+            );
+
+            // Find a user whose email matches (case-insensitive)
+            const matchedUser = registeredUsers.find(
+                (u) => u.email.toLowerCase() === values.email.toLowerCase()
+            );
+
+            // Validate: email must exist and password must match exactly
+            if (!matchedUser || matchedUser.password !== values.password) {
+                setAuthError('Invalid credentials. Please register first or check your email and password.');
+                setSubmitting(false);
+                notifications.show({
+                    title: 'Login Failed',
+                    message: 'Invalid email or password. Please register first.',
+                    color: 'red',
+                    autoClose: 5000,
+                });
+                return;
+            }
+
+            // Credentials are valid — set the active session
             localStorage.setItem('token', 'simple-auth-token-123');
-            
-            // Set user info to avoid "Ram Karki" default
-            const name = values.email.split('@')[0];
+            // Persist the email so bookingStorage can scope history to this user
+            localStorage.setItem('car_wash_logged_in_email', matchedUser.email.trim().toLowerCase());
             localStorage.setItem('car_wash_user', JSON.stringify({
-                name: name.charAt(0).toUpperCase() + name.slice(1),
-                email: values.email,
-                phone: '9812345678',
-                address: 'Kathmandu, Nepal',
-                avatar: `https://ui-avatars.com/api/?name=${name}+User&background=random`
+                name: matchedUser.name,
+                email: matchedUser.email,
+                phone: matchedUser.phone,
+                address: matchedUser.address,
+                avatar: matchedUser.avatar,
             }));
 
             notifications.show({
                 title: 'Welcome Back!',
-                message: 'Login successful! Redirecting...',
+                message: `Hello, ${matchedUser.name}! Login successful.`,
                 color: 'green',
             });
             navigate(from, { replace: true });
@@ -83,6 +117,18 @@ const LoginPage = () => {
                                     radius="md"
                                     labelProps={{ className: 'mb-1 text-xs font-bold uppercase tracking-wider text-slate-500' }}
                                 />
+                                {authError && (
+                                    <Alert
+                                        icon={<AlertCircle size={16} />}
+                                        title="Login Failed"
+                                        color="red"
+                                        radius="md"
+                                        variant="light"
+                                        mt="xs"
+                                    >
+                                        {authError}
+                                    </Alert>
+                                )}
                                 <Button 
                                     fullWidth 
                                     className="bg-indigo-600 hover:bg-indigo-700 text-white font-extrabold h-12 shadow-lg shadow-indigo-600/10 rounded-xl" 

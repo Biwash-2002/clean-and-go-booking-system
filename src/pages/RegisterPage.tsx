@@ -32,24 +32,47 @@ const RegisterPage = () => {
                 .oneOf([Yup.ref('password')], 'Passwords must match')
                 .required('Confirm password is required'),
         }),
-        onSubmit: (values) => {
-            console.log('Register values:', values);
-            
-            // Simulating database storage
-            localStorage.setItem('car_wash_user', JSON.stringify({
+        onSubmit: (values, { setFieldError, setSubmitting }) => {
+            // Load existing registered users (mock DB)
+            const existingUsers: Array<{ email: string; password: string; name: string; phone: string; avatar: string; address: string }> =
+                JSON.parse(localStorage.getItem('car_wash_registered_users') || '[]');
+
+            // Check for duplicate email
+            const alreadyRegistered = existingUsers.some(
+                (u) => u.email.toLowerCase() === values.email.toLowerCase()
+            );
+
+            if (alreadyRegistered) {
+                setFieldError('email', 'This email is already registered. Please log in.');
+                setSubmitting(false);
+                notifications.show({
+                    title: 'Email Already Registered',
+                    message: 'An account with this email already exists. Please log in.',
+                    color: 'red',
+                    autoClose: 5000,
+                });
+                return;
+            }
+
+            // Build new user record (store password for login validation)
+            const newUser = {
                 name: `${values.firstName} ${values.lastName}`,
                 email: values.email,
+                password: values.password, // stored for client-side auth check
                 phone: values.phone,
                 address: 'Not available',
-                avatar: `https://ui-avatars.com/api/?name=${values.firstName}+${values.lastName}&background=random`
-            }));
-            localStorage.removeItem('car_wash_bookings'); // Clear history for fresh start
+                avatar: `https://ui-avatars.com/api/?name=${values.firstName}+${values.lastName}&background=random`,
+            };
+
+            // Persist to mock DB
+            existingUsers.push(newUser);
+            localStorage.setItem('car_wash_registered_users', JSON.stringify(existingUsers));
 
             notifications.show({
                 title: 'Account Created Successfully!',
                 message: 'Your account is ready. Please log in to continue.',
                 color: 'green',
-                autoClose: 5000
+                autoClose: 5000,
             });
             navigate('/login');
         },
